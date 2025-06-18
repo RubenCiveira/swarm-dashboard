@@ -1,0 +1,1446 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Apache CI/CD Manager</title>
+    <script src="https://cdn.jsdelivr.net/npm/monaco-editor@0.45.0/min/vs/loader.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f5f5f5;
+            color: #333;
+        }
+        
+        .header {
+            background: #2563eb;
+            color: white;
+            padding: 1rem 2rem;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .header h1 {
+            font-size: 1.5rem;
+            font-weight: 600;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+        
+        .actions {
+            margin-bottom: 2rem;
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+        
+        .btn {
+            background: #2563eb;
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.5rem;
+            cursor: pointer;
+            font-size: 0.875rem;
+            font-weight: 500;
+            transition: background-color 0.2s;
+            text-decoration: none;
+            display: inline-block;
+        }
+        
+        .btn:hover {
+            background: #1d4ed8;
+        }
+        
+        .btn-success {
+            background: #059669;
+        }
+        
+        .btn-success:hover {
+            background: #047857;
+        }
+        
+        .btn-danger {
+            background: #dc2626;
+        }
+        
+        .btn-danger:hover {
+            background: #b91c1c;
+        }
+        
+        .btn-secondary {
+            background: #6b7280;
+        }
+        
+        .btn-secondary:hover {
+            background: #4b5563;
+        }
+
+        .btn-warning {
+            background: #d97706;
+        }
+
+        .btn-warning:hover {
+            background: #b45309;
+        }
+        
+        .apps-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 1.5rem;
+        }
+        
+        .app-card {
+            background: white;
+            border-radius: 0.75rem;
+            padding: 1.5rem;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            border: 1px solid #e5e7eb;
+        }
+        
+        .app-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+        
+        .app-name {
+            font-size: 1.125rem;
+            font-weight: 600;
+            color: #111827;
+        }
+        
+        .app-status {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: 500;
+        }
+        
+        .status-active {
+            background: #d1fae5;
+            color: #065f46;
+        }
+        
+        .status-inactive {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+        
+        .app-info {
+            margin-bottom: 1rem;
+        }
+        
+        .app-info p {
+            margin-bottom: 0.5rem;
+            font-size: 0.875rem;
+            color: #6b7280;
+        }
+        
+        .app-actions {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+        
+        .app-actions .btn {
+            padding: 0.5rem 1rem;
+            font-size: 0.75rem;
+        }
+
+        .database-badge {
+            display: inline-block;
+            padding: 0.25rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 500;
+            margin-left: 0.5rem;
+        }
+
+        .db-pgsql {
+            background: #dbeafe;
+            color: #1e40af;
+        }
+
+        .db-mariadb {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        .db-status-active {
+            background: #d1fae5;
+            color: #065f46;
+        }
+
+        .db-status-error {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+        
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+        }
+        
+        .modal-content {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            border-radius: 0.75rem;
+            padding: 2rem;
+            width: 90%;
+            max-width: 700px;
+            max-height: 95vh;
+            overflow-y: auto;
+        }
+        
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+        
+        .modal-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+        }
+        
+        .close {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: #6b7280;
+        }
+        
+        .form-group {
+            margin-bottom: 1rem;
+        }
+        
+        .form-label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+            color: #374151;
+        }
+        
+        .form-input, .form-select {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid #d1d5db;
+            border-radius: 0.5rem;
+            font-size: 0.875rem;
+        }
+        
+        .form-input:focus, .form-select:focus {
+            outline: none;
+            border-color: #2563eb;
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+        }
+        
+        .editor-container {
+            height: 300px;
+            min-height: 300px;
+            border: 1px solid #d1d5db;
+            border-radius: 0.5rem;
+            overflow: hidden;
+            position: relative;
+        }
+        
+        #env-editor {
+            height: 100%;
+            width: 100%;
+        }
+
+        #env-textarea-fallback {
+            font-family: 'Courier New', monospace !important;
+            line-height: 1.4;
+            tab-size: 2;
+        }
+
+        #env-textarea-fallback:focus {
+            outline: 2px solid #2563eb;
+            outline-offset: -2px;
+        }
+        
+        .logs-container {
+            background: #1f2937;
+            color: #f9fafb;
+            padding: 1rem;
+            border-radius: 0.5rem;
+            font-family: 'Courier New', monospace;
+            font-size: 0.75rem;
+            white-space: pre-wrap;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        
+        .loading {
+            display: inline-block;
+            width: 1rem;
+            height: 1rem;
+            border: 2px solid #f3f4f6;
+            border-top: 2px solid #2563eb;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+        }
+
+        .form-row-3 {
+            display: grid;
+            grid-template-columns: 2fr 1fr 1fr;
+            gap: 1rem;
+        }
+
+        .database-list {
+            margin-bottom: 1rem;
+        }
+
+        .database-item {
+            border: 1px solid #e5e7eb;
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background: white;
+        }
+
+        .database-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.5rem;
+        }
+
+        .database-name {
+            font-weight: 600;
+            font-size: 1rem;
+        }
+
+        .database-actions {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .database-info {
+            font-size: 0.875rem;
+            color: #6b7280;
+        }
+
+        .new-database-option {
+            background: #f9fafb;
+            border: 2px dashed #d1d5db;
+            border-radius: 0.5rem;
+            padding: 1rem;
+            text-align: center;
+            cursor: pointer;
+            margin-top: 1rem;
+            transition: all 0.2s;
+        }
+
+        .new-database-option:hover {
+            border-color: #2563eb;
+            background: #eff6ff;
+        }
+
+        .new-database-form {
+            display: none;
+            background: #f9fafb;
+            border: 1px solid #d1d5db;
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-top: 1rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Apache CI/CD Manager</h1>
+    </div>
+    
+    <div class="container">
+        <div class="actions">
+            <button class="btn" onclick="openCreateModal()">Nueva Aplicación</button>
+            <button class="btn btn-secondary" onclick="openCredentialsModal()">Gestionar Credenciales Git</button>
+            <button class="btn btn-warning" onclick="openDatabasesModal()">Gestionar Bases de Datos</button>
+        </div>
+        
+        <div id="apps-container" class="apps-grid">
+            <!-- Las aplicaciones se cargarán aquí -->
+        </div>
+    </div>
+    
+    <!-- Modal para crear/editar aplicación -->
+    <div id="app-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title" id="modal-title">Nueva Aplicación</h2>
+                <button class="close" onclick="closeModal()">&times;</button>
+            </div>
+            
+            <form id="app-form">
+                <input type="hidden" id="app-id">
+                
+                <div class="form-group">
+                    <label class="form-label" for="app-name">Nombre de la Aplicación *</label>
+                    <input type="text" id="app-name" class="form-input" required>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label" for="app-repository">Repositorio Git *</label>
+                    <input type="url" id="app-repository" class="form-input" placeholder="https://github.com/usuario/repo.git" required>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label" for="app-hostname">Hostname/Dominio *</label>
+                    <input type="text" id="app-hostname" class="form-input" placeholder="ejemplo.com" required>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label" for="app-database">Base de Datos</label>
+                    <select id="app-database" class="form-select">
+                        <option value="">Sin base de datos</option>
+                        <!-- Las opciones se cargarán dinámicamente -->
+                    </select>
+                    
+                    <div class="new-database-option" onclick="toggleNewDatabaseForm()">
+                        + Crear nueva base de datos
+                    </div>
+                    
+                    <div id="new-database-form" class="new-database-form">
+                        <div class="form-row">
+                            <div>
+                                <label class="form-label" for="new-db-name">Nombre descriptivo *</label>
+                                <input type="text" id="new-db-name" class="form-input" placeholder="Mi Base de Datos">
+                            </div>
+                            <div>
+                                <label class="form-label" for="new-db-type">Tipo *</label>
+                                <select id="new-db-type" class="form-select">
+                                    <option value="">Seleccionar tipo</option>
+                                    <option value="mariadb">MariaDB/MySQL</option>
+                                    <option value="pgsql">PostgreSQL</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <div class="form-row-3">
+                            <div>
+                                <label class="form-label" for="new-db-database">Nombre BD *</label>
+                                <input type="text" id="new-db-database" class="form-input" placeholder="mi_app_db">
+                            </div>
+                            <div>
+                                <label class="form-label" for="new-db-host">Host</label>
+                                <input type="text" id="new-db-host" class="form-input" placeholder="localhost" value="localhost">
+                            </div>
+                            <div>
+                                <label class="form-label" for="new-db-port">Puerto</label>
+                                <input type="number" id="new-db-port" class="form-input" placeholder="Auto">
+                            </div>
+                        </div>
+                        
+                        <div class="form-row">
+                            <div>
+                                <label class="form-label" for="new-db-username">Usuario *</label>
+                                <input type="text" id="new-db-username" class="form-input" placeholder="db_user">
+                            </div>
+                            <div>
+                                <label class="form-label" for="new-db-password">Contraseña *</label>
+                                <input type="password" id="new-db-password" class="form-input" placeholder="contraseña_segura">
+                            </div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label class="form-label" for="new-db-description">Descripción</label>
+                            <input type="text" id="new-db-description" class="form-input" placeholder="Descripción opcional">
+                        </div>
+                        
+                        <div style="display: flex; gap: 1rem; justify-content: flex-end;">
+                            <button type="button" class="btn btn-secondary" onclick="cancelNewDatabase()">Cancelar</button>
+                            <button type="button" class="btn" onclick="createNewDatabase()">Crear Base de Datos</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="app-git-credential">Credencial Git (opcional)</label>
+                    <select id="app-git-credential" class="form-select">
+                        <option value="">Repositorio público</option>
+                        <!-- Las opciones se cargarán dinámicamente -->
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="app-custom-token">Token personalizado (opcional)</label>
+                    <input type="password" id="app-custom-token" class="form-input" placeholder="Token específico para este proyecto">
+                    <small style="color: #6b7280; font-size: 0.75rem;">Si se especifica, se usará en lugar de la credencial seleccionada arriba</small>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">Archivo .env</label>
+                    <div id="env-editor" class="editor-container"></div>
+                </div>
+                
+                <div style="display: flex; gap: 1rem; justify-content: flex-end; margin-top: 2rem;">
+                    <button type="button" class="btn btn-secondary" onclick="closeModal()">Cancelar</button>
+                    <button type="submit" class="btn">Guardar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <!-- Modal para logs -->
+    <div id="logs-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title">Logs de Despliegue</h2>
+                <button class="close" onclick="closeLogsModal()">&times;</button>
+            </div>
+            
+            <div id="logs-content" class="logs-container">
+                <!-- Los logs se cargarán aquí -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal para gestionar bases de datos -->
+    <div id="databases-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title">Gestionar Bases de Datos</h2>
+                <button class="close" onclick="closeDatabasesModal()">&times;</button>
+            </div>
+            
+            <div style="margin-bottom: 1rem;">
+                <button class="btn" onclick="openNewDatabaseModal()">Nueva Base de Datos</button>
+            </div>
+        
+            <div id="databases-list" class="database-list">
+                <!-- Las bases de datos se cargarán aquí -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal para crear/editar base de datos -->
+    <div id="database-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title" id="database-modal-title">Nueva Base de Datos</h2>
+                <button class="close" onclick="closeDatabaseModal()">&times;</button>
+            </div>
+        
+            <form id="database-form">
+                <input type="hidden" id="database-id">
+            
+                <div class="form-group">
+                    <label class="form-label" for="database-name">Nombre descriptivo *</label>
+                    <input type="text" id="database-name" class="form-input" placeholder="Mi Base de Datos Principal" required>
+                </div>
+            
+                <div class="form-row">
+                    <div>
+                        <label class="form-label" for="database-type">Tipo de Base de Datos *</label>
+                        <select id="database-type" class="form-select" required onchange="updateDefaultPort()">
+                            <option value="">Seleccionar tipo</option>
+                            <option value="mariadb">MariaDB/MySQL</option>
+                            <option value="pgsql">PostgreSQL</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="form-label" for="database-db-name">Nombre de la BD *</label>
+                        <input type="text" id="database-db-name" class="form-input" placeholder="mi_aplicacion_db" required>
+                    </div>
+                </div>
+            
+                <div class="form-row-3">
+                    <div>
+                        <label class="form-label" for="database-host">Host</label>
+                        <input type="text" id="database-host" class="form-input" placeholder="localhost" value="localhost">
+                    </div>
+                    <div>
+                        <label class="form-label" for="database-port">Puerto</label>
+                        <input type="number" id="database-port" class="form-input" placeholder="Auto">
+                    </div>
+                    <div></div>
+                </div>
+            
+                <div class="form-row">
+                    <div>
+                        <label class="form-label" for="database-username">Usuario *</label>
+                        <input type="text" id="database-username" class="form-input" placeholder="db_usuario" required>
+                    </div>
+                    <div>
+                        <label class="form-label" for="database-password">Contraseña *</label>
+                        <input type="password" id="database-password" class="form-input" placeholder="contraseña_segura" required>
+                    </div>
+                </div>
+            
+                <div class="form-group">
+                    <label class="form-label" for="database-description">Descripción</label>
+                    <textarea id="database-description" class="form-input" rows="2" placeholder="Descripción opcional de la base de datos"></textarea>
+                </div>
+            
+                <div style="display: flex; gap: 1rem; justify-content: flex-end; margin-top: 2rem;">
+                    <button type="button" class="btn btn-secondary" onclick="closeDatabaseModal()">Cancelar</button>
+                    <button type="submit" class="btn">Guardar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal para gestionar credenciales -->
+    <div id="credentials-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title">Gestionar Credenciales Git</h2>
+                <button class="close" onclick="closeCredentialsModal()">&times;</button>
+            </div>
+            
+            <div style="margin-bottom: 1rem;">
+                <button class="btn" onclick="openNewCredentialModal()">Nueva Credencial</button>
+            </div>
+        
+            <div id="credentials-list">
+                <!-- Las credenciales se cargarán aquí -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal para crear/editar credencial -->
+    <div id="credential-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title" id="credential-modal-title">Nueva Credencial Git</h2>
+                <button class="close" onclick="closeCredentialModal()">&times;</button>
+            </div>
+        
+            <form id="credential-form">
+                <input type="hidden" id="credential-id">
+            
+                <div class="form-group">
+                    <label class="form-label" for="credential-name">Nombre *</label>
+                    <input type="text" id="credential-name" class="form-input" placeholder="Mi GitHub Personal" required>
+                </div>
+            
+                <div class="form-group">
+                    <label class="form-label" for="credential-provider">Proveedor *</label>
+                    <select id="credential-provider" class="form-select" required>
+                        <option value="">Seleccionar proveedor</option>
+                        <option value="github">GitHub</option>
+                        <option value="gitlab">GitLab</option>
+                        <option value="bitbucket">Bitbucket</option>
+                        <option value="other">Otro</option>
+                    </select>
+                </div>
+            
+                <div class="form-group">
+                    <label class="form-label" for="credential-username">Usuario (opcional)</label>
+                    <input type="text" id="credential-username" class="form-input" placeholder="tu-usuario">
+                </div>
+            
+                <div class="form-group">
+                    <label class="form-label" for="credential-token">Token de acceso *</label>
+                    <input type="password" id="credential-token" class="form-input" placeholder="ghp_xxxxxxxxxxxx" required>
+                    <small style="color: #6b7280; font-size: 0.75rem;">Personal Access Token o Deploy Token</small>
+                </div>
+            
+                <div class="form-group">
+                    <label class="form-label" for="credential-description">Descripción</label>
+                    <textarea id="credential-description" class="form-input" rows="2" placeholder="Descripción opcional"></textarea>
+                </div>
+            
+                <div style="display: flex; gap: 1rem; justify-content: flex-end; margin-top: 2rem;">
+                    <button type="button" class="btn btn-secondary" onclick="closeCredentialModal()">Cancelar</button>
+                    <button type="submit" class="btn">Guardar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        let envEditor;
+        let currentAppId = null;
+        let currentCredentialId = null;
+        let currentDatabaseId = null;
+
+        // Inicializar Monaco Editor
+        function initializeMonacoEditor() {
+            require.config({ paths: { vs: 'https://cdn.jsdelivr.net/npm/monaco-editor@0.45.0/min/vs' } });
+            require(['vs/editor/editor.main'], function () {
+                try {
+                    envEditor = monaco.editor.create(document.getElementById('env-editor'), {
+                        value: '# Configuración de entorno\nAPP_ENV=production\nAPP_DEBUG=false\n\n# Base de datos\nDB_HOST=localhost\nDB_DATABASE=mi_app\nDB_USERNAME=usuario\nDB_PASSWORD=contraseña\n\n# Otras configuraciones\nAPP_URL=https://mi-app.com',
+                        language: 'shell',
+                        theme: 'vs-light',
+                        minimap: { enabled: false },
+                        scrollBeyondLastLine: false,
+                        fontSize: 14,
+                        lineNumbers: 'on',
+                        wordWrap: 'on',
+                        automaticLayout: false,
+                        fixedOverflowWidgets: true
+                    });
+
+                    console.log('Monaco Editor inicializado correctamente');
+                } catch (error) {
+                    console.error('Error inicializando Monaco Editor:', error);
+                    createFallbackEditor();
+                }
+            });
+        }
+
+        function createFallbackEditor() {
+            const container = document.getElementById('env-editor');
+            container.innerHTML = `
+                <textarea 
+                    id="env-textarea-fallback" 
+                    style="width: 100%; height: 300px; min-height: 300px; border: none; outline: none; resize: none; font-family: 'Courier New', monospace; font-size: 14px; padding: 10px; box-sizing: border-box;"
+                    placeholder="# Configuración de entorno
+APP_ENV=production
+APP_DEBUG=false
+
+# Base de datos
+DB_HOST=localhost
+DB_DATABASE=mi_app
+DB_USERNAME=usuario
+DB_PASSWORD=contraseña
+
+# Otras configuraciones
+APP_URL=https://mi-app.com"
+                ></textarea>
+            `;
+
+            envEditor = {
+                getValue: function() {
+                    return document.getElementById('env-textarea-fallback').value;
+                },
+                setValue: function(value) {
+                    document.getElementById('env-textarea-fallback').value = value || '';
+                },
+                layout: function() {
+                    // No hacer nada para el fallback
+                }
+            };
+
+            console.log('Editor fallback creado');
+        }
+
+        // Cargar aplicaciones al iniciar
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('DOM cargado, inicializando...');
+
+            setTimeout(function() {
+                initializeMonacoEditor();
+            }, 100);
+
+            loadApps();
+            loadCredentialsSelect();
+            loadDatabasesSelect();
+        });
+
+        function updateDefaultPort() {
+            const typeSelect = document.getElementById('database-type');
+            const portInput = document.getElementById('database-port');
+            
+            if (typeSelect.value === 'pgsql') {
+                portInput.placeholder = '5432';
+            } else if (typeSelect.value === 'mariadb') {
+                portInput.placeholder = '3306';
+            } else {
+                portInput.placeholder = 'Auto';
+            }
+        }
+
+        function toggleNewDatabaseForm() {
+            const form = document.getElementById('new-database-form');
+            form.style.display = form.style.display === 'none' ? 'block' : 'none';
+        }
+
+        function cancelNewDatabase() {
+            document.getElementById('new-database-form').style.display = 'none';
+            // Limpiar formulario
+            document.getElementById('new-db-name').value = '';
+            document.getElementById('new-db-type').value = '';
+            document.getElementById('new-db-database').value = '';
+            document.getElementById('new-db-host').value = 'localhost';
+            document.getElementById('new-db-port').value = '';
+            document.getElementById('new-db-username').value = '';
+            document.getElementById('new-db-password').value = '';
+            document.getElementById('new-db-description').value = '';
+        }
+
+        async function createNewDatabase() {
+            const formData = {
+                name: document.getElementById('new-db-name').value,
+                db_type: document.getElementById('new-db-type').value,
+                db_name: document.getElementById('new-db-database').value,
+                db_host: document.getElementById('new-db-host').value,
+                db_port: document.getElementById('new-db-port').value,
+                db_username: document.getElementById('new-db-username').value,
+                db_password: document.getElementById('new-db-password').value,
+                description: document.getElementById('new-db-description').value
+            };
+
+            if (!formData.name || !formData.db_type || !formData.db_name || !formData.db_username || !formData.db_password) {
+                alert('Por favor, completa todos los campos obligatorios');
+                return;
+            }
+
+            try {
+                const response = await fetch('./api/databases', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(formData)
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    cancelNewDatabase();
+                    loadDatabasesSelect();
+                    // Seleccionar la nueva base de datos
+                    setTimeout(() => {
+                        document.getElementById('app-database').value = result.database_id;
+                    }, 100);
+                    alert(result.message);
+                } else {
+                    alert('Error: ' + result.message);
+                }
+            } catch (error) {
+                alert('Error creando la base de datos: ' + error.message);
+            }
+        }
+
+        async function loadApps() {
+            try {
+                const response = await fetch('./api/apps');
+                const apps = await response.json();
+                renderApps(apps);
+            } catch (error) {
+                console.error('Error cargando aplicaciones:', error);
+            }
+        }
+        
+        function renderApps(apps) {
+            const container = document.getElementById('apps-container');
+            
+            if (apps.length === 0) {
+                container.innerHTML = '<p style="text-align: center; color: #6b7280; grid-column: 1 / -1;">No hay aplicaciones configuradas</p>';
+                return;
+            }
+            
+            container.innerHTML = apps.map(app => `
+                <div class="app-card">
+                    <div class="app-header">
+                        <h3 class="app-name">${app.name}</h3>
+                        <span class="app-status status-${app.status}">
+                            ${app.status === 'active' ? 'Activa' : 'Inactiva'}
+                        </span>
+                    </div>
+                    
+                    <div class="app-info">
+                        <p><strong>Hostname:</strong> ${app.hostname}</p>
+                        <p><strong>Repositorio:</strong> ${app.repository}</p>
+                        <p><strong>Directorio:</strong> ${app.directory}</p>
+                        ${app.database_name ? `<p><strong>Base de datos:</strong> ${app.database_name} <span class="database-badge db-${app.db_type} db-status-${app.db_status}">${app.db_type?.toUpperCase()}</span></p>` : ''}
+                        ${app.last_deployment ? `<p><strong>Último despliegue:</strong> ${new Date(app.last_deployment).toLocaleString()}</p>` : ''}
+                    </div>
+                    
+                    <div class="app-actions">
+                        <button class="btn btn-success" onclick="deployApp(${app.id})">
+                            <span id="deploy-btn-${app.id}">Desplegar</span>
+                        </button>
+                        <button class="btn btn-secondary" onclick="editApp(${app.id})">Editar</button>
+                        <button class="btn btn-secondary" onclick="viewLogs(${app.id})">Logs</button>
+                        <button class="btn btn-danger" onclick="deleteApp(${app.id})">Eliminar</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        async function loadCredentialsSelect() {
+            try {
+                const response = await fetch('./api/git-credentials');
+                const credentials = await response.json();
+                
+                const select = document.getElementById('app-git-credential');
+                select.innerHTML = '<option value="">Repositorio público</option>';
+                
+                credentials.forEach(cred => {
+                    const option = document.createElement('option');
+                    option.value = cred.id;
+                    option.textContent = `${cred.name} (${cred.provider})`;
+                    select.appendChild(option);
+                });
+            } catch (error) {
+                console.error('Error cargando credenciales:', error);
+            }
+        }
+
+        async function loadDatabasesSelect() {
+            try {
+                const response = await fetch('./api/databases');
+                const databases = await response.json();
+                
+                const select = document.getElementById('app-database');
+                select.innerHTML = '<option value="">Sin base de datos</option>';
+                
+                databases.forEach(db => {
+                    const option = document.createElement('option');
+                    option.value = db.id;
+                    option.textContent = `${db.name} (${db.db_type.toUpperCase()})`;
+                    select.appendChild(option);
+                });
+            } catch (error) {
+                console.error('Error cargando bases de datos:', error);
+            }
+        }
+
+        function openCreateModal() {
+            currentAppId = null;
+            document.getElementById('modal-title').textContent = 'Nueva Aplicación';
+            document.getElementById('app-form').reset();
+            document.getElementById('new-database-form').style.display = 'none';
+
+            document.getElementById('app-modal').style.display = 'block';
+
+            setTimeout(function() {
+                if (envEditor) {
+                    envEditor.setValue('# Configuración de entorno\nAPP_ENV=production\nAPP_DEBUG=false\n\n# Base de datos\nDB_HOST=localhost\nDB_DATABASE=mi_app\nDB_USERNAME=usuario\nDB_PASSWORD=contraseña\n\n# Otras configuraciones\nAPP_URL=https://mi-app.com');
+                    
+                    if (envEditor.layout) {
+                        envEditor.layout();
+                    }
+                }
+            }, 200);
+        }
+
+        async function editApp(id) {
+            try {
+                const response = await fetch(`./api/apps/${id}`);
+                const app = await response.json();
+
+                currentAppId = id;
+                document.getElementById('modal-title').textContent = 'Editar Aplicación';
+                document.getElementById('app-id').value = app.id;
+                document.getElementById('app-name').value = app.name;
+                document.getElementById('app-repository').value = app.repository;
+                document.getElementById('app-hostname').value = app.hostname;
+                document.getElementById('app-database').value = app.database_id || '';
+                document.getElementById('app-git-credential').value = app.git_credential_id || '';
+                document.getElementById('app-custom-token').value = '';
+                document.getElementById('new-database-form').style.display = 'none';
+
+                document.getElementById('app-modal').style.display = 'block';
+
+                setTimeout(function() {
+                    if (envEditor) {
+                        envEditor.setValue(app.env_content || '# Configuración de entorno\nAPP_ENV=production\nAPP_DEBUG=false\n\n# Base de datos\nDB_HOST=localhost\nDB_DATABASE=mi_app\nDB_USERNAME=usuario\nDB_PASSWORD=contraseña');
+                        
+                        if (envEditor.layout) {
+                            envEditor.layout();
+                        }
+                    }
+                }, 200);
+
+            } catch (error) {
+                alert('Error cargando la aplicación: ' + error.message);
+            }
+        }
+        
+        function closeModal() {
+            document.getElementById('app-modal').style.display = 'none';
+        }
+        
+        function closeLogsModal() {
+            document.getElementById('logs-modal').style.display = 'none';
+        }
+
+        // Gestión de bases de datos
+        function openDatabasesModal() {
+            loadDatabasesList();
+            document.getElementById('databases-modal').style.display = 'block';
+        }
+
+        function closeDatabasesModal() {
+            document.getElementById('databases-modal').style.display = 'none';
+        }
+
+        async function loadDatabasesList() {
+            try {
+                const response = await fetch('./api/databases');
+                const databases = await response.json();
+                
+                const container = document.getElementById('databases-list');
+                
+                if (databases.length === 0) {
+                    container.innerHTML = '<p style="text-align: center; color: #6b7280;">No hay bases de datos configuradas</p>';
+                    return;
+                }
+                
+                container.innerHTML = databases.map(db => `
+                    <div class="database-item">
+                        <div class="database-header">
+                            <div>
+                                <h4 class="database-name">${db.name}</h4>
+                                <div class="database-info">
+                                    <span class="database-badge db-${db.db_type}">${db.db_type.toUpperCase()}</span>
+                                    <span class="database-badge db-status-${db.status}">${db.status.toUpperCase()}</span>
+                                </div>
+                            </div>
+                            <div class="database-actions">
+                                <button class="btn btn-secondary" style="padding: 0.5rem 1rem; font-size: 0.75rem;" onclick="testDatabase(${db.id})">Test</button>
+                                <button class="btn btn-warning" style="padding: 0.5rem 1rem; font-size: 0.75rem;" onclick="setupDatabase(${db.id})">Setup</button>
+                                <button class="btn btn-secondary" style="padding: 0.5rem 1rem; font-size: 0.75rem;" onclick="editDatabase(${db.id})">Editar</button>
+                                <button class="btn btn-danger" style="padding: 0.5rem 1rem; font-size: 0.75rem;" onclick="deleteDatabase(${db.id})">Eliminar</button>
+                            </div>
+                        </div>
+                        <div class="database-info">
+                            <p><strong>BD:</strong> ${db.db_name} • <strong>Host:</strong> ${db.db_host}:${db.db_port} • <strong>Usuario:</strong> ${db.db_username}</p>
+                            ${db.description ? `<p><strong>Descripción:</strong> ${db.description}</p>` : ''}
+                            <p><strong>Creada:</strong> ${new Date(db.created_at).toLocaleString()}</p>
+                        </div>
+                    </div>
+                `).join('');
+            } catch (error) {
+                console.error('Error cargando bases de datos:', error);
+            }
+        }
+
+        function openNewDatabaseModal() {
+            currentDatabaseId = null;
+            document.getElementById('database-modal-title').textContent = 'Nueva Base de Datos';
+            document.getElementById('database-form').reset();
+            document.getElementById('database-host').value = 'localhost';
+            document.getElementById('database-modal').style.display = 'block';
+        }
+
+        async function editDatabase(id) {
+            try {
+                const response = await fetch(`./api/databases/${id}`);
+                const database = await response.json();
+                
+                currentDatabaseId = id;
+                document.getElementById('database-modal-title').textContent = 'Editar Base de Datos';
+                document.getElementById('database-id').value = database.id;
+                document.getElementById('database-name').value = database.name;
+                document.getElementById('database-type').value = database.db_type;
+                document.getElementById('database-db-name').value = database.db_name;
+                document.getElementById('database-host').value = database.db_host;
+                document.getElementById('database-port').value = database.db_port;
+                document.getElementById('database-username').value = database.db_username;
+                document.getElementById('database-description').value = database.description || '';
+                // No cargar la contraseña por seguridad
+                
+                updateDefaultPort();
+                document.getElementById('database-modal').style.display = 'block';
+            } catch (error) {
+                alert('Error cargando la base de datos: ' + error.message);
+            }
+        }
+
+        function closeDatabaseModal() {
+            document.getElementById('database-modal').style.display = 'none';
+        }
+
+        async function testDatabase(id) {
+            try {
+                const response = await fetch(`./api/databases/${id}/test`, {
+                    method: 'POST'
+                });
+                const result = await response.json();
+                
+                if (result.success) {
+                    alert('✅ ' + result.message);
+                    loadDatabasesList(); // Recargar para actualizar estado
+                } else {
+                    alert('❌ ' + result.message);
+                }
+            } catch (error) {
+                alert('Error probando la conexión: ' + error.message);
+            }
+        }
+
+        async function setupDatabase(id) {
+            if (!confirm('¿Estás seguro de que quieres configurar esta base de datos? Esto creará la BD y el usuario si no existen.')) {
+                return;
+            }
+
+            try {
+                const response = await fetch(`./api/databases/${id}/setup`, {
+                    method: 'POST'
+                });
+                const result = await response.json();
+                
+                if (result.success) {
+                    alert('✅ ' + result.message);
+                    if (result.logs) {
+                        console.log('Setup logs:', result.logs);
+                    }
+                    loadDatabasesList();
+                } else {
+                    alert('❌ ' + result.message);
+                }
+            } catch (error) {
+                alert('Error configurando la base de datos: ' + error.message);
+            }
+        }
+
+        async function deleteDatabase(id) {
+            if (!confirm('¿Estás seguro de que quieres eliminar esta base de datos?')) {
+                return;
+            }
+            
+            try {
+                const response = await fetch(`./api/databases/${id}`, {
+                    method: 'DELETE'
+                });
+                const result = await response.json();
+                
+                if (result.success) {
+                    loadDatabasesList();
+                    loadDatabasesSelect();
+                    alert(result.message);
+                } else {
+                    alert('Error: ' + result.message);
+                }
+            } catch (error) {
+                alert('Error eliminando la base de datos: ' + error.message);
+            }
+        }
+
+        // Gestión de credenciales Git
+        function openCredentialsModal() {
+            loadCredentialsList();
+            document.getElementById('credentials-modal').style.display = 'block';
+        }
+
+        function closeCredentialsModal() {
+            document.getElementById('credentials-modal').style.display = 'none';
+        }
+
+        async function loadCredentialsList() {
+            try {
+                const response = await fetch('./api/git-credentials');
+                const credentials = await response.json();
+                
+                const container = document.getElementById('credentials-list');
+                
+                if (credentials.length === 0) {
+                    container.innerHTML = '<p style="text-align: center; color: #6b7280;">No hay credenciales configuradas</p>';
+                    return;
+                }
+                
+                container.innerHTML = credentials.map(cred => `
+                    <div style="border: 1px solid #e5e7eb; border-radius: 0.5rem; padding: 1rem; margin-bottom: 1rem;">
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <div>
+                                <h4 style="margin: 0; font-weight: 600;">${cred.name}</h4>
+                                <p style="margin: 0.25rem 0; color: #6b7280; font-size: 0.875rem;">
+                                    ${cred.provider} ${cred.username ? `• ${cred.username}` : ''}
+                                </p>
+                                ${cred.description ? `<p style="margin: 0.25rem 0; color: #6b7280; font-size: 0.75rem;">${cred.description}</p>` : ''}
+                            </div>
+                            <div style="display: flex; gap: 0.5rem;">
+                                <button class="btn btn-secondary" style="padding: 0.5rem 1rem; font-size: 0.75rem;" onclick="editCredential(${cred.id})">Editar</button>
+                                <button class="btn btn-danger" style="padding: 0.5rem 1rem; font-size: 0.75rem;" onclick="deleteCredential(${cred.id})">Eliminar</button>
+                            </div>
+                        </div>
+                    </div>
+                `).join('');
+            } catch (error) {
+                console.error('Error cargando credenciales:', error);
+            }
+        }
+
+        function openNewCredentialModal() {
+            currentCredentialId = null;
+            document.getElementById('credential-modal-title').textContent = 'Nueva Credencial Git';
+            document.getElementById('credential-form').reset();
+            document.getElementById('credential-modal').style.display = 'block';
+        }
+
+        async function editCredential(id) {
+            try {
+                const response = await fetch(`./api/git-credentials/${id}`);
+                const credential = await response.json();
+                
+                currentCredentialId = id;
+                document.getElementById('credential-modal-title').textContent = 'Editar Credencial Git';
+                document.getElementById('credential-id').value = credential.id;
+                document.getElementById('credential-name').value = credential.name;
+                document.getElementById('credential-provider').value = credential.provider;
+                document.getElementById('credential-username').value = credential.username || '';
+                document.getElementById('credential-description').value = credential.description || '';
+                // No cargar el token por seguridad
+                
+                document.getElementById('credential-modal').style.display = 'block';
+            } catch (error) {
+                alert('Error cargando la credencial: ' + error.message);
+            }
+        }
+
+        function closeCredentialModal() {
+            document.getElementById('credential-modal').style.display = 'none';
+        }
+
+        async function deleteCredential(id) {
+            if (!confirm('¿Estás seguro de que quieres eliminar esta credencial?')) {
+                return;
+            }
+            
+            try {
+                const response = await fetch(`./api/git-credentials/${id}`, {
+                    method: 'DELETE'
+                });
+                const result = await response.json();
+                
+                if (result.success) {
+                    loadCredentialsList();
+                    loadCredentialsSelect();
+                    alert(result.message);
+                } else {
+                    alert('Error: ' + result.message);
+                }
+            } catch (error) {
+                alert('Error eliminando la credencial: ' + error.message);
+            }
+        }
+
+        // Event listeners para formularios
+        document.getElementById('app-form').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const formData = {
+                name: document.getElementById('app-name').value,
+                repository: document.getElementById('app-repository').value,
+                hostname: document.getElementById('app-hostname').value,
+                database_id: document.getElementById('app-database').value || null,
+                env_content: envEditor ? envEditor.getValue() : '',
+                git_credential_id: document.getElementById('app-git-credential').value || null,
+                custom_git_token: document.getElementById('app-custom-token').value || null
+            };
+            
+            try {
+                let response;
+                if (currentAppId) {
+                    response = await fetch(`./api/apps/${currentAppId}`, {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(formData)
+                    });
+                } else {
+                    response = await fetch('./api/apps', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(formData)
+                    });
+                }
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    closeModal();
+                    loadApps();
+                    alert(result.message);
+                } else {
+                    alert('Error: ' + result.message);
+                }
+            } catch (error) {
+                alert('Error guardando la aplicación: ' + error.message);
+            }
+        });
+
+        document.getElementById('database-form').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const formData = {
+                name: document.getElementById('database-name').value,
+                db_type: document.getElementById('database-type').value,
+                db_name: document.getElementById('database-db-name').value,
+                db_host: document.getElementById('database-host').value,
+                db_port: document.getElementById('database-port').value,
+                db_username: document.getElementById('database-username').value,
+                db_password: document.getElementById('database-password').value,
+                description: document.getElementById('database-description').value
+            };
+            
+            try {
+                let response;
+                if (currentDatabaseId) {
+                    response = await fetch(`./api/databases/${currentDatabaseId}`, {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(formData)
+                    });
+                } else {
+                    response = await fetch('./api/databases', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(formData)
+                    });
+                }
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    closeDatabaseModal();
+                    loadDatabasesList();
+                    loadDatabasesSelect();
+                    alert(result.message);
+                } else {
+                    alert('Error: ' + result.message);
+                }
+            } catch (error) {
+                alert('Error guardando la base de datos: ' + error.message);
+            }
+        });
+
+        document.getElementById('credential-form').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const formData = {
+                name: document.getElementById('credential-name').value,
+                provider: document.getElementById('credential-provider').value,
+                username: document.getElementById('credential-username').value,
+                token: document.getElementById('credential-token').value,
+                description: document.getElementById('credential-description').value
+            };
+            
+            try {
+                let response;
+                if (currentCredentialId) {
+                    response = await fetch(`./api/git-credentials/${currentCredentialId}`, {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(formData)
+                    });
+                } else {
+                    response = await fetch('./api/git-credentials', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(formData)
+                    });
+                }
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    closeCredentialModal();
+                    loadCredentialsList();
+                    loadCredentialsSelect();
+                    alert(result.message);
+                } else {
+                    alert('Error: ' + result.message);
+                }
+            } catch (error) {
+                alert('Error guardando la credencial: ' + error.message);
+            }
+        });
+
+        // Funciones de despliegue y logs
+        async function deployApp(id) {
+            const deployBtn = document.getElementById(`deploy-btn-${id}`);
+            deployBtn.innerHTML = '<span class="loading"></span> Desplegando...';
+            
+            try {
+                const response = await fetch(`./api/apps/${id}/deploy`, {
+                    method: 'POST'
+                });
+                const result = await response.json();
+                
+                if (result.success) {
+                    alert('Despliegue completado exitosamente');
+                    loadApps();
+                } else {
+                    alert('Error en el despliegue: ' + result.message);
+                }
+                
+                if (result.logs) {
+                    console.log('Logs del despliegue:', result.logs);
+                }
+            } catch (error) {
+                alert('Error durante el despliegue: ' + error.message);
+            } finally {
+                deployBtn.innerHTML = 'Desplegar';
+            }
+        }
+        
+        async function deleteApp(id) {
+            if (!confirm('¿Estás seguro de que quieres eliminar esta aplicación?')) {
+                return;
+            }
+            
+            try {
+                const response = await fetch(`./api/apps/${id}`, {
+                    method: 'DELETE'
+                });
+                const result = await response.json();
+                
+                if (result.success) {
+                    loadApps();
+                    alert(result.message);
+                } else {
+                    alert('Error: ' + result.message);
+                }
+            } catch (error) {
+                alert('Error eliminando la aplicación: ' + error.message);
+            }
+        }
+        
+        async function viewLogs(id) {
+            try {
+                const response = await fetch(`./api/apps/${id}/logs`);
+                const result = await response.json();
+                
+                const logsContent = document.getElementById('logs-content');
+                if (result.logs && result.logs.length > 0) {
+                    logsContent.textContent = result.logs.map(log => 
+                        `[${new Date(log.deployment_date).toLocaleString()}]\n${log.log_content}\n${'='.repeat(50)}\n`
+                    ).join('');
+                } else {
+                    logsContent.textContent = 'No hay logs disponibles para esta aplicación.';
+                }
+                
+                document.getElementById('logs-modal').style.display = 'block';
+            } catch (error) {
+                alert('Error cargando los logs: ' + error.message);
+            }
+        }
+        
+        // Cerrar modales al hacer clic fuera
+        window.addEventListener('click', function(e) {
+            if (e.target.classList.contains('modal')) {
+                e.target.style.display = 'none';
+            }
+        });
+    </script>
+</body>
+</html>

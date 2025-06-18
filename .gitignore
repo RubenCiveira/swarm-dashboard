@@ -1,0 +1,26 @@
+# Composer
+/vendor/
+/cache/
+composer.lock
+
+# Entornos y Configuración
+.env
+.env.local
+.env.*.local
+.env.testing
+.env.staging
+.env.production
+
+# Archivos de caché y logs
+/.phpunit.result.cache
+/.cache/
+/node_modules/
+.DS_Store
+Thumbs.db
+
+# Archivos de sesiones y logs PHP
+sessions/
+logs/
+storage/
+data/apps.db
+composer.phar
