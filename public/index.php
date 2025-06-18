@@ -1,5 +1,6 @@
 <?php
 require_once '../vendor/autoload.php';
+require_once '../src/Access.php';
 require_once '../src/Database.php';
 require_once '../src/AppManager.php';
 require_once '../src/DatabaseManager.php';
@@ -14,6 +15,8 @@ $appManager = new AppManager($database);
 $databaseManager = new DatabaseManager($database);
 
 $app = AppFactory::create();
+new Access($app);
+
 $scriptName = $_SERVER['SCRIPT_NAME']; // Devuelve algo como "/midashboard/index.php"
 $basePath = str_replace('/index.php', '', $scriptName); // "/midashboard"
 $app->setBasePath($basePath);
