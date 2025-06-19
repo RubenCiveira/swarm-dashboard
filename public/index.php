@@ -1,9 +1,9 @@
 <?php
 require_once '../vendor/autoload.php';
-require_once '../src/Access.php';
 require_once '../src/Database.php';
 require_once '../src/AppManager.php';
 require_once '../src/DatabaseManager.php';
+require_once '../src/Access.php';
 
 use Slim\Factory\AppFactory;
 use Psr\Http\Message\ResponseInterface as Response;
@@ -16,7 +16,6 @@ $databaseManager = new DatabaseManager($database);
 
 $app = AppFactory::create();
 new Access($app);
-
 $scriptName = $_SERVER['SCRIPT_NAME']; // Devuelve algo como "/midashboard/index.php"
 $basePath = str_replace('/index.php', '', $scriptName); // "/midashboard"
 $app->setBasePath($basePath);
@@ -152,6 +151,50 @@ $app->post('/api/databases/{id}/test', function (Request $request, Response $res
 
 $app->post('/api/databases/{id}/setup', function (Request $request, Response $response, $args) use ($databaseManager) {
     $result = $databaseManager->createDatabaseAndUser($args['id']);
+    $response->getBody()->write(json_encode($result));
+    return $response->withHeader('Content-Type', 'application/json');
+});
+
+$app->post('/api/databases/{id}/drop', function (Request $request, Response $response, $args) use ($databaseManager) {
+    $result = $databaseManager->dropDatabaseAndUser($args['id']);
+    $response->getBody()->write(json_encode($result));
+    return $response->withHeader('Content-Type', 'application/json');
+});
+
+$app->post('/api/databases/{id}/backup', function (Request $request, Response $response, $args) use ($databaseManager) {
+    $result = $databaseManager->createBackup($args['id']);
+    $response->getBody()->write(json_encode($result));
+    return $response->withHeader('Content-Type', 'application/json');
+});
+
+$app->post('/api/databases/{id}/restore', function (Request $request, Response $response, $args) use ($databaseManager) {
+    $data = $request->getParsedBody();
+    $backupFile = $data['backup_file'] ?? '';
+    
+    if (empty($backupFile)) {
+        $response->getBody()->write(json_encode(['success' => false, 'message' => 'Archivo de backup no especificado']));
+        return $response->withHeader('Content-Type', 'application/json')->withStatus(400);
+    }
+    
+    $result = $databaseManager->restoreBackup($args['id'], $backupFile);
+    $response->getBody()->write(json_encode($result));
+    return $response->withHeader('Content-Type', 'application/json');
+});
+
+$app->get('/api/databases/{id}/backups', function (Request $request, Response $response, $args) use ($databaseManager) {
+    $backups = $databaseManager->listBackups($args['id']);
+    $response->getBody()->write(json_encode(['backups' => $backups]));
+    return $response->withHeader('Content-Type', 'application/json');
+});
+
+$app->get('/api/backups', function (Request $request, Response $response) use ($databaseManager) {
+    $backups = $databaseManager->listBackups();
+    $response->getBody()->write(json_encode(['backups' => $backups]));
+    return $response->withHeader('Content-Type', 'application/json');
+});
+
+$app->delete('/api/backups/{filename}', function (Request $request, Response $response, $args) use ($databaseManager) {
+    $result = $databaseManager->deleteBackup($args['filename']);
     $response->getBody()->write(json_encode($result));
     return $response->withHeader('Content-Type', 'application/json');
 });
