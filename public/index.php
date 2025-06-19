@@ -21,7 +21,6 @@ $app->setBasePath($basePath);
 $app->addBodyParsingMiddleware();
 $app->addErrorMiddleware(true, true, true);
 new Access($app);
-
 // CORS middleware
 $app->add(function (Request $request, $handler) {
     $response = $handler->handle($request);
@@ -224,15 +223,8 @@ $app->any('/adminer/{id}', function (Request $request, Response $response, array
         'port' => $db['db_port'],
         'driver' => $db['db_type'], // 'server', 'pgsql', 'sqlite', etc.
     ];
-    ob_start();
     require __DIR__ . '/../templates/adminer-5.3.0.php';
-    die("--------");
-    $html = ob_get_clean();
-    if( !isset($_GET['file'])) {
-        $html = '<h1>GOGOGO</h1>'.preg_replace('#amarouk#si', '', $html);
-    }
-    $response->getBody()->write( $html );
-    return $response;
+    exit;
 });
 
 
