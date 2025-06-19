@@ -15,12 +15,12 @@ $appManager = new AppManager($database);
 $databaseManager = new DatabaseManager($database);
 
 $app = AppFactory::create();
-new Access($app);
 $scriptName = $_SERVER['SCRIPT_NAME']; // Devuelve algo como "/midashboard/index.php"
 $basePath = str_replace('/index.php', '', $scriptName); // "/midashboard"
 $app->setBasePath($basePath);
 $app->addBodyParsingMiddleware();
 $app->addErrorMiddleware(true, true, true);
+new Access($app);
 
 // CORS middleware
 $app->add(function (Request $request, $handler) {
@@ -33,7 +33,7 @@ $app->add(function (Request $request, $handler) {
 
 // Serve static files
 $app->get('/', function (Request $request, Response $response) {
-    $html = file_get_contents(__DIR__ . '/dashboard.html');
+    $html = file_get_contents(__DIR__ . '/../templates/dashboard.html');
     $response->getBody()->write($html);
     return $response->withHeader('Content-Type', 'text/html');
 });
@@ -199,49 +199,42 @@ $app->delete('/api/backups/{filename}', function (Request $request, Response $re
     return $response->withHeader('Content-Type', 'application/json');
 });
 
-// API Routes for Database Migrations
-$app->get('/api/migrations/status', function (Request $request, Response $response) use ($database) {
-    $currentVersion = $database->getCurrentVersion();
-    $history = $database->getVersionHistory();
-    
-    $result = [
-        'current_version' => $currentVersion,
-        'total_migrations' => count($history),
-        'recent_migrations' => array_slice($history, 0, 10)
-    ];
-    
-    $response->getBody()->write(json_encode($result));
-    return $response->withHeader('Content-Type', 'application/json');
-});
+$app->any('/adminer/{id}', function (Request $request, Response $response, array $args) use ($databaseManager) {
+    $id = $args['id'];
 
-$app->get('/api/migrations/history', function (Request $request, Response $response) use ($database) {
-    $history = $database->getVersionHistory();
-    
-    $response->getBody()->write(json_encode(['history' => $history]));
-    return $response->withHeader('Content-Type', 'application/json');
-});
+    // Recuperar la base de datos desde tu almacenamiento
+    $db = $databaseManager->getDatabase($id);
 
-$app->post('/api/migrations/validate', function (Request $request, Response $response) use ($database) {
-    $result = $database->validateIntegrity();
-    
-    $response->getBody()->write(json_encode($result));
-    return $response->withHeader('Content-Type', 'application/json');
-});
-
-$app->post('/api/migrations/execute', function (Request $request, Response $response) use ($database) {
-    $data = $request->getParsedBody();
-    $migrations = $data['migrations'] ?? [];
-    
-    if (empty($migrations)) {
-        $response->getBody()->write(json_encode(['success' => false, 'message' => 'No se proporcionaron migraciones']));
-        return $response->withHeader('Content-Type', 'application/json')->withStatus(400);
+    if( $request->getMethod()=='GET' && !isset($_GET['server']) ) {
+        // Guardar en sesión para que Adminer lo use
+        $_POST['auth'] = [
+            'server' => $db['db_host'],
+            'username' => $db['db_username'],
+            'password' => $databaseManager->decryptPassword( $db['db_password'] ),
+            'database' => $db['db_name'],
+            'port' => $db['db_port'],
+            'driver' => $db['db_type'] == 'mariadb' ? 'server' : $db['db_type'], // 'server', 'pgsql', 'sqlite', etc.
+        ];
     }
-    
-    $result = $database->sincronizar($migrations);
-    
-    $response->getBody()->write(json_encode($result));
-    return $response->withHeader('Content-Type', 'application/json');
+    $_SESSION['adminer_login'] = [
+        'server' => $db['db_host'],
+        'username' => $db['db_username'],
+        'password' => $databaseManager->decryptPassword( $db['db_password'] ),
+        'database' => $db['db_name'],
+        'port' => $db['db_port'],
+        'driver' => $db['db_type'], // 'server', 'pgsql', 'sqlite', etc.
+    ];
+    ob_start();
+    require __DIR__ . '/../templates/adminer-5.3.0.php';
+    die("--------");
+    $html = ob_get_clean();
+    if( !isset($_GET['file'])) {
+        $html = '<h1>GOGOGO</h1>'.preg_replace('#amarouk#si', '', $html);
+    }
+    $response->getBody()->write( $html );
+    return $response;
 });
+
 
 // Incluir GitCredentialManager
 require_once '../src/GitCredentialManager.php';

@@ -9,6 +9,7 @@ use Psr\Http\Server\MiddlewareInterface;
 use Psr\Http\Server\RequestHandlerInterface;
 use Slim\App;
 
+session_cache_limiter('');
 session_start();
 
 class Access implements MiddlewareInterface

@@ -1912,6 +1912,9 @@ SESSION_DRIVER=file`
                 <li><a class="dropdown-item" href="#" onclick="setupDatabase(${
                   db.id
                 })">Setup</a></li>
+                <li><a class="dropdown-item" href="#" onclick="connectDatabase(${
+                  db.id
+                })">Connect BD</a></li>
                 <li><a class="dropdown-item" href="#" onclick="dropDatabase(${
                   db.id
                 })">Drop BD</a></li>
@@ -2723,6 +2726,9 @@ SESSION_DRIVER=file`);
         }
       }
 
+      async function connectDatabase(id) {
+        document.location = './adminer/' + id;
+      }
       async function dropDatabase(id) {
         if (
           !confirm(
