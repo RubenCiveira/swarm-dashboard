@@ -466,6 +466,171 @@
             white-space: pre-line;
             margin-bottom: 1rem;
         }
+            .tabs-container {
+                margin-bottom: 1.5rem;
+            }
+
+            .tabs-nav {
+                display: flex;
+                border-bottom: 2px solid #e5e7eb;
+                margin-bottom: 1.5rem;
+            }
+
+            .tab-button {
+                background: none;
+                border: none;
+                padding: 1rem 1.5rem;
+                cursor: pointer;
+                font-size: 0.875rem;
+                font-weight: 500;
+                color: #6b7280;
+                border-bottom: 2px solid transparent;
+                transition: all 0.2s;
+                position: relative;
+            }
+
+            .tab-button:hover {
+                color: #374151;
+                background: #f9fafb;
+            }
+
+            .tab-button.active {
+                color: #2563eb;
+                border-bottom-color: #2563eb;
+                background: #eff6ff;
+            }
+
+            .tab-content {
+                display: none;
+            }
+
+            .tab-content.active {
+                display: block;
+            }
+
+            .tab-icon {
+                margin-right: 0.5rem;
+                font-size: 1rem;
+            }
+
+            .step-indicator {
+                display: inline-block;
+                width: 1.5rem;
+                height: 1.5rem;
+                border-radius: 50%;
+                background: #e5e7eb;
+                color: #6b7280;
+                text-align: center;
+                line-height: 1.5rem;
+                font-size: 0.75rem;
+                font-weight: 600;
+                margin-right: 0.5rem;
+            }
+
+            .tab-button.active .step-indicator {
+                background: #2563eb;
+                color: white;
+            }
+
+            .tab-button.completed .step-indicator {
+                background: #059669;
+                color: white;
+            }
+
+            .form-navigation {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                margin-top: 2rem;
+                padding-top: 1rem;
+                border-top: 1px solid #e5e7eb;
+            }
+
+            .nav-buttons {
+                display: flex;
+                gap: 1rem;
+            }
+
+            .btn-nav {
+                padding: 0.75rem 1.5rem;
+                border-radius: 0.5rem;
+                border: 1px solid #d1d5db;
+                background: white;
+                color: #374151;
+                cursor: pointer;
+                font-size: 0.875rem;
+                font-weight: 500;
+                transition: all 0.2s;
+            }
+
+            .btn-nav:hover {
+                background: #f9fafb;
+                border-color: #9ca3af;
+            }
+
+            .btn-nav:disabled {
+                opacity: 0.5;
+                cursor: not-allowed;
+            }
+
+            .btn-nav.primary {
+                background: #2563eb;
+                color: white;
+                border-color: #2563eb;
+            }
+
+            .btn-nav.primary:hover {
+                background: #1d4ed8;
+                border-color: #1d4ed8;
+            }
+
+            .validation-message {
+                color: #dc2626;
+                font-size: 0.75rem;
+                margin-top: 0.25rem;
+                display: none;
+            }
+
+            .form-group.error .form-input,
+            .form-group.error .form-select {
+                border-color: #dc2626;
+                box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.1);
+            }
+
+            .form-group.error .validation-message {
+                display: block;
+            }
+
+            .tab-summary {
+                background: #f9fafb;
+                border: 1px solid #e5e7eb;
+                border-radius: 0.5rem;
+                padding: 1rem;
+                margin-bottom: 1rem;
+            }
+
+            .summary-item {
+                display: flex;
+                justify-content: space-between;
+                margin-bottom: 0.5rem;
+                font-size: 0.875rem;
+            }
+
+            .summary-item:last-child {
+                margin-bottom: 0;
+            }
+
+            .summary-label {
+                font-weight: 500;
+                color: #374151;
+            }
+
+            .summary-value {
+                color: #6b7280;
+                text-align: right;
+                max-width: 60%;
+                word-break: break-word;
+            }
     </style>
 </head>
 <body>
@@ -486,125 +651,203 @@
     </div>
     
     <!-- Modal para crear/editar aplicación -->
-    <div id="app-modal" class="modal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h2 class="modal-title" id="modal-title">Nueva Aplicación</h2>
-                <button class="close" onclick="closeModal()">&times;</button>
+<div id="app-modal" class="modal">
+    <div class="modal-content" style="max-width: 800px;">
+        <div class="modal-header">
+            <h2 class="modal-title" id="modal-title">Nueva Aplicación</h2>
+            <button class="close" onclick="closeModal()">&times;</button>
+        </div>
+        
+        <form id="app-form">
+            <input type="hidden" id="app-id">
+            
+            <!-- Navegación de pestañas -->
+            <div class="tabs-container">
+                <div class="tabs-nav">
+                    <button type="button" class="tab-button active" data-tab="basic" onclick="switchTab('basic')">
+                        <span class="step-indicator">1</span>
+                        <span class="tab-icon">📝</span>
+                        Información Básica
+                    </button>
+                    <button type="button" class="tab-button" data-tab="database" onclick="switchTab('database')">
+                        <span class="step-indicator">2</span>
+                        <span class="tab-icon">🗄️</span>
+                        Base de Datos
+                    </button>
+                    <button type="button" class="tab-button" data-tab="environment" onclick="switchTab('environment')">
+                        <span class="step-indicator">3</span>
+                        <span class="tab-icon">⚙️</span>
+                        Variables de Entorno
+                    </button>
+                </div>
+                
+                <!-- Pestaña 1: Información Básica -->
+                <div id="tab-basic" class="tab-content active">
+                    <div class="form-group">
+                        <label class="form-label" for="app-name">Nombre de la Aplicación *</label>
+                        <input type="text" id="app-name" class="form-input" required>
+                        <div class="validation-message">El nombre es obligatorio</div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label" for="app-repository">Repositorio Git *</label>
+                        <input type="url" id="app-repository" class="form-input" placeholder="https://github.com/usuario/repo.git" required>
+                        <div class="validation-message">Ingresa una URL válida del repositorio</div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label" for="app-hostname">Hostname/Dominio *</label>
+                        <input type="text" id="app-hostname" class="form-input" placeholder="ejemplo.com" required>
+                        <div class="validation-message">El hostname es obligatorio</div>
+                        <small style="color: #6b7280; font-size: 0.75rem;">
+                            El directorio se calculará automáticamente como: <strong>/var/www/html/[hostname]</strong>
+                        </small>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label" for="app-git-credential">Credencial Git (opcional)</label>
+                        <select id="app-git-credential" class="form-select">
+                            <option value="">Repositorio público</option>
+                            <!-- Las opciones se cargarán dinámicamente -->
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label" for="app-custom-token">Token personalizado (opcional)</label>
+                        <input type="password" id="app-custom-token" class="form-input" placeholder="Token específico para este proyecto">
+                        <small style="color: #6b7280; font-size: 0.75rem;">Si se especifica, se usará en lugar de la credencial seleccionada arriba</small>
+                    </div>
+                </div>
+                
+                <!-- Pestaña 2: Base de Datos -->
+                <div id="tab-database" class="tab-content">
+                    <div class="form-group">
+                        <label class="form-label" for="app-database">Base de Datos</label>
+                        <select id="app-database" class="form-select" onchange="updateDatabaseSummary()">
+                            <option value="">Sin base de datos</option>
+                            <!-- Las opciones se cargarán dinámicamente -->
+                        </select>
+                        
+                        <div class="new-database-option" onclick="toggleNewDatabaseForm()">
+                            + Crear nueva base de datos
+                        </div>
+                        
+                        <div id="new-database-form" class="new-database-form">
+                            <div class="form-row">
+                                <div>
+                                    <label class="form-label" for="new-db-name">Nombre descriptivo *</label>
+                                    <input type="text" id="new-db-name" class="form-input" placeholder="Mi Base de Datos">
+                                </div>
+                                <div>
+                                    <label class="form-label" for="new-db-type">Tipo *</label>
+                                    <select id="new-db-type" class="form-select">
+                                        <option value="">Seleccionar tipo</option>
+                                        <option value="mariadb">MariaDB/MySQL</option>
+                                        <option value="pgsql">PostgreSQL</option>
+                                    </select>
+                                </div>
+                            </div>
+                            
+                            <div class="form-row-3">
+                                <div>
+                                    <label class="form-label" for="new-db-database">Nombre BD *</label>
+                                    <input type="text" id="new-db-database" class="form-input" placeholder="mi_app_db">
+                                </div>
+                                <div>
+                                    <label class="form-label" for="new-db-host">Host</label>
+                                    <input type="text" id="new-db-host" class="form-input" placeholder="localhost" value="localhost">
+                                </div>
+                                <div>
+                                    <label class="form-label" for="new-db-port">Puerto</label>
+                                    <input type="number" id="new-db-port" class="form-input" placeholder="Auto">
+                                </div>
+                            </div>
+                            
+                            <div class="form-row">
+                                <div>
+                                    <label class="form-label" for="new-db-username">Usuario *</label>
+                                    <input type="text" id="new-db-username" class="form-input" placeholder="db_user">
+                                </div>
+                                <div>
+                                    <label class="form-label" for="new-db-password">Contraseña *</label>
+                                    <input type="password" id="new-db-password" class="form-input" placeholder="contraseña_segura">
+                                </div>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label class="form-label" for="new-db-description">Descripción</label>
+                                <input type="text" id="new-db-description" class="form-input" placeholder="Descripción opcional">
+                            </div>
+                            
+                            <div style="display: flex; gap: 1rem; justify-content: flex-end;">
+                                <button type="button" class="btn btn-secondary" onclick="cancelNewDatabase()">Cancelar</button>
+                                <button type="button" class="btn" onclick="createNewDatabase()">Crear Base de Datos</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="database-summary" class="tab-summary" style="display: none;">
+                        <h4 style="margin: 0 0 0.5rem 0; font-size: 0.875rem; color: #374151;">Base de datos seleccionada:</h4>
+                        <div id="database-summary-content"></div>
+                    </div>
+                </div>
+                
+                <!-- Pestaña 3: Variables de Entorno -->
+                <div id="tab-environment" class="tab-content">
+                    <div class="form-group">
+                        <div class="form-label-with-help">
+                            <label class="form-label">Archivo .env</label>
+                            <button type="button" class="btn btn-info" onclick="showEnvHelp(event)" title="Ayuda sobre variables de plantilla">?</button>
+                        </div>
+                        <div id="env-editor" class="editor-container"></div>
+                    </div>
+
+                    <div class="tab-summary">
+                        <h4 style="margin: 0 0 0.5rem 0; font-size: 0.875rem; color: #374151;">Resumen de la aplicación:</h4>
+                        <div id="app-summary-content">
+                            <div class="summary-item">
+                                <span class="summary-label">Nombre:</span>
+                                <span class="summary-value" id="summary-name">-</span>
+                            </div>
+                            <div class="summary-item">
+                                <span class="summary-label">Repositorio:</span>
+                                <span class="summary-value" id="summary-repository">-</span>
+                            </div>
+                            <div class="summary-item">
+                                <span class="summary-label">Hostname:</span>
+                                <span class="summary-value" id="summary-hostname">-</span>
+                            </div>
+                            <div class="summary-item">
+                                <span class="summary-label">Directorio:</span>
+                                <span class="summary-value" id="summary-directory">-</span>
+                            </div>
+                            <div class="summary-item">
+                                <span class="summary-label">Base de datos:</span>
+                                <span class="summary-value" id="summary-database">Sin base de datos</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
             
-            <form id="app-form">
-                <input type="hidden" id="app-id">
-                
-                <div class="form-group">
-                    <label class="form-label" for="app-name">Nombre de la Aplicación *</label>
-                    <input type="text" id="app-name" class="form-input" required>
+            <!-- Navegación del formulario -->
+            <div class="form-navigation">
+                <div class="nav-buttons">
+                    <button type="button" class="btn-nav" id="prev-btn" onclick="previousTab()" disabled>
+                        ← Anterior
+                    </button>
+                    <button type="button" class="btn-nav primary" id="next-btn" onclick="nextTab()">
+                        Siguiente →
+                    </button>
                 </div>
-                
-                <div class="form-group">
-                    <label class="form-label" for="app-repository">Repositorio Git *</label>
-                    <input type="url" id="app-repository" class="form-input" placeholder="https://github.com/usuario/repo.git" required>
-                </div>
-                
-                <div class="form-group">
-                    <label class="form-label" for="app-hostname">Hostname/Dominio *</label>
-                    <input type="text" id="app-hostname" class="form-input" placeholder="ejemplo.com" required>
-                </div>
-                
-                <div class="form-group">
-                    <label class="form-label" for="app-database">Base de Datos</label>
-                    <select id="app-database" class="form-select">
-                        <option value="">Sin base de datos</option>
-                        <!-- Las opciones se cargarán dinámicamente -->
-                    </select>
-                    
-                    <div class="new-database-option" onclick="toggleNewDatabaseForm()">
-                        + Crear nueva base de datos
-                    </div>
-                    
-                    <div id="new-database-form" class="new-database-form">
-                        <div class="form-row">
-                            <div>
-                                <label class="form-label" for="new-db-name">Nombre descriptivo *</label>
-                                <input type="text" id="new-db-name" class="form-input" placeholder="Mi Base de Datos">
-                            </div>
-                            <div>
-                                <label class="form-label" for="new-db-type">Tipo *</label>
-                                <select id="new-db-type" class="form-select">
-                                    <option value="">Seleccionar tipo</option>
-                                    <option value="mariadb">MariaDB/MySQL</option>
-                                    <option value="pgsql">PostgreSQL</option>
-                                </select>
-                            </div>
-                        </div>
-                        
-                        <div class="form-row-3">
-                            <div>
-                                <label class="form-label" for="new-db-database">Nombre BD *</label>
-                                <input type="text" id="new-db-database" class="form-input" placeholder="mi_app_db">
-                            </div>
-                            <div>
-                                <label class="form-label" for="new-db-host">Host</label>
-                                <input type="text" id="new-db-host" class="form-input" placeholder="localhost" value="localhost">
-                            </div>
-                            <div>
-                                <label class="form-label" for="new-db-port">Puerto</label>
-                                <input type="number" id="new-db-port" class="form-input" placeholder="Auto">
-                            </div>
-                        </div>
-                        
-                        <div class="form-row">
-                            <div>
-                                <label class="form-label" for="new-db-username">Usuario *</label>
-                                <input type="text" id="new-db-username" class="form-input" placeholder="db_user">
-                            </div>
-                            <div>
-                                <label class="form-label" for="new-db-password">Contraseña *</label>
-                                <input type="password" id="new-db-password" class="form-input" placeholder="contraseña_segura">
-                            </div>
-                        </div>
-                        
-                        <div class="form-group">
-                            <label class="form-label" for="new-db-description">Descripción</label>
-                            <input type="text" id="new-db-description" class="form-input" placeholder="Descripción opcional">
-                        </div>
-                        
-                        <div style="display: flex; gap: 1rem; justify-content: flex-end;">
-                            <button type="button" class="btn btn-secondary" onclick="cancelNewDatabase()">Cancelar</button>
-                            <button type="button" class="btn" onclick="createNewDatabase()">Crear Base de Datos</button>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="form-group">
-                    <label class="form-label" for="app-git-credential">Credencial Git (opcional)</label>
-                    <select id="app-git-credential" class="form-select">
-                        <option value="">Repositorio público</option>
-                        <!-- Las opciones se cargarán dinámicamente -->
-                    </select>
-                </div>
-
-                <div class="form-group">
-                    <label class="form-label" for="app-custom-token">Token personalizado (opcional)</label>
-                    <input type="password" id="app-custom-token" class="form-input" placeholder="Token específico para este proyecto">
-                    <small style="color: #6b7280; font-size: 0.75rem;">Si se especifica, se usará en lugar de la credencial seleccionada arriba</small>
-                </div>
-                
-                <div class="form-group">
-                    <div class="form-label-with-help">
-                        <label class="form-label">Archivo .env</label>
-                        <button type="button" class="btn btn-info" onclick="showEnvHelp(event)" title="Ayuda sobre variables de plantilla">?</button>
-                    </div>
-                    <div id="env-editor" class="editor-container"></div>
-                </div>
-                
-                <div style="display: flex; gap: 1rem; justify-content: flex-end; margin-top: 2rem;">
+                <div class="nav-buttons">
                     <button type="button" class="btn btn-secondary" onclick="closeModal()">Cancelar</button>
-                    <button type="submit" class="btn">Guardar</button>
+                    <button type="submit" class="btn" id="save-btn" style="display: none;">Guardar Aplicación</button>
                 </div>
-            </form>
-        </div>
+            </div>
+        </form>
     </div>
+</div>
 
     <!-- Popup de ayuda para variables .env -->
     <div id="env-help-popup" class="help-popup">
@@ -1698,6 +1941,266 @@ SESSION_DRIVER=file`);
                 e.target.style.display = 'none';
             }
         });
+
+// Variables para el manejo de pestañas
+let currentTab = 'basic';
+let completedTabs = new Set();
+
+// Funciones para el manejo de pestañas
+function switchTab(tabName) {
+    // Validar pestaña actual antes de cambiar
+    if (!validateCurrentTab()) {
+        return;
+    }
+    
+    // Marcar pestaña actual como completada
+    completedTabs.add(currentTab);
+    
+    // Ocultar pestaña actual
+    document.getElementById(`tab-${currentTab}`).classList.remove('active');
+    document.querySelector(`[data-tab="${currentTab}"]`).classList.remove('active');
+    
+    // Mostrar nueva pestaña
+    currentTab = tabName;
+    document.getElementById(`tab-${tabName}`).classList.add('active');
+    document.querySelector(`[data-tab="${tabName}"]`).classList.add('active');
+    
+    // Actualizar indicadores visuales
+    updateTabIndicators();
+    updateNavigationButtons();
+    updateSummary();
+    
+    // Si es la pestaña de entorno, redimensionar editor
+    if (tabName === 'environment') {
+        setTimeout(() => {
+            if (envEditor && envEditor.layout) {
+                envEditor.layout();
+            }
+        }, 100);
+    }
+}
+
+function nextTab() {
+    if (!validateCurrentTab()) {
+        return;
+    }
+    
+    const tabs = ['basic', 'database', 'environment'];
+    const currentIndex = tabs.indexOf(currentTab);
+    
+    if (currentIndex < tabs.length - 1) {
+        switchTab(tabs[currentIndex + 1]);
+    }
+}
+
+function previousTab() {
+    const tabs = ['basic', 'database', 'environment'];
+    const currentIndex = tabs.indexOf(currentTab);
+    
+    if (currentIndex > 0) {
+        switchTab(tabs[currentIndex - 1]);
+    }
+}
+
+function validateCurrentTab() {
+    const errors = [];
+    
+    if (currentTab === 'basic') {
+        const name = document.getElementById('app-name').value.trim();
+        const repository = document.getElementById('app-repository').value.trim();
+        const hostname = document.getElementById('app-hostname').value.trim();
+        
+        if (!name) {
+            showFieldError('app-name', 'El nombre es obligatorio');
+            errors.push('name');
+        } else {
+            hideFieldError('app-name');
+        }
+        
+        if (!repository) {
+            showFieldError('app-repository', 'El repositorio es obligatorio');
+            errors.push('repository');
+        } else if (!isValidUrl(repository)) {
+            showFieldError('app-repository', 'Ingresa una URL válida del repositorio');
+            errors.push('repository');
+        } else {
+            hideFieldError('app-repository');
+        }
+        
+        if (!hostname) {
+            showFieldError('app-hostname', 'El hostname es obligatorio');
+            errors.push('hostname');
+        } else {
+            hideFieldError('app-hostname');
+        }
+    }
+    
+    return errors.length === 0;
+}
+
+function showFieldError(fieldId, message) {
+    const field = document.getElementById(fieldId);
+    const formGroup = field.closest('.form-group');
+    const errorMsg = formGroup.querySelector('.validation-message');
+    
+    formGroup.classList.add('error');
+    if (errorMsg) {
+        errorMsg.textContent = message;
+    }
+}
+
+function hideFieldError(fieldId) {
+    const field = document.getElementById(fieldId);
+    const formGroup = field.closest('.form-group');
+    formGroup.classList.remove('error');
+}
+
+function isValidUrl(string) {
+    try {
+        new URL(string);
+        return true;
+    } catch (_) {
+        return false;
+    }
+}
+
+function updateTabIndicators() {
+    const tabs = ['basic', 'database', 'environment'];
+    
+    tabs.forEach(tab => {
+        const button = document.querySelector(`[data-tab="${tab}"]`);
+        const indicator = button.querySelector('.step-indicator');
+        
+        if (completedTabs.has(tab)) {
+            button.classList.add('completed');
+            indicator.textContent = '✓';
+        } else {
+            button.classList.remove('completed');
+            const index = tabs.indexOf(tab) + 1;
+            indicator.textContent = index;
+        }
+    });
+}
+
+function updateNavigationButtons() {
+    const tabs = ['basic', 'database', 'environment'];
+    const currentIndex = tabs.indexOf(currentTab);
+    
+    const prevBtn = document.getElementById('prev-btn');
+    const nextBtn = document.getElementById('next-btn');
+    const saveBtn = document.getElementById('save-btn');
+    
+    // Botón anterior
+    prevBtn.disabled = currentIndex === 0;
+    
+    // Botón siguiente/guardar
+    if (currentIndex === tabs.length - 1) {
+        nextBtn.style.display = 'none';
+        saveBtn.style.display = 'inline-block';
+    } else {
+        nextBtn.style.display = 'inline-block';
+        saveBtn.style.display = 'none';
+    }
+}
+
+function updateSummary() {
+    // Actualizar resumen en tiempo real
+    const name = document.getElementById('app-name').value || '-';
+    const repository = document.getElementById('app-repository').value || '-';
+    const hostname = document.getElementById('app-hostname').value || '-';
+    const directory = hostname !== '-' ? `/var/www/html/${hostname}` : '-';
+    
+    document.getElementById('summary-name').textContent = name;
+    document.getElementById('summary-repository').textContent = repository;
+    document.getElementById('summary-hostname').textContent = hostname;
+    document.getElementById('summary-directory').textContent = directory;
+    
+    updateDatabaseSummary();
+}
+
+function updateDatabaseSummary() {
+    const databaseSelect = document.getElementById('app-database');
+    const selectedOption = databaseSelect.options[databaseSelect.selectedIndex];
+    const summaryElement = document.getElementById('database-summary');
+    const summaryContent = document.getElementById('database-summary-content');
+    const appSummaryDb = document.getElementById('summary-database');
+    
+    if (databaseSelect.value) {
+        const dbText = selectedOption.textContent;
+        summaryElement.style.display = 'block';
+        summaryContent.innerHTML = `
+            <div class="summary-item">
+                <span class="summary-label">Configuración:</span>
+                <span class="summary-value">${dbText}</span>
+            </div>
+        `;
+        appSummaryDb.textContent = dbText;
+    } else {
+        summaryElement.style.display = 'none';
+        appSummaryDb.textContent = 'Sin base de datos';
+    }
+}
+
+// Actualizar la función openCreateModal para resetear pestañas
+function openCreateModal() {
+    currentAppId = null;
+    currentTab = 'basic';
+    completedTabs.clear();
+    
+    document.getElementById('modal-title').textContent = 'Nueva Aplicación';
+    document.getElementById('app-form').reset();
+    document.getElementById('new-database-form').style.display = 'none';
+
+    // Resetear pestañas
+    document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
+    document.querySelectorAll('.tab-button').forEach(btn => {
+        btn.classList.remove('active', 'completed');
+        const indicator = btn.querySelector('.step-indicator');
+        const index = Array.from(btn.parentNode.children).indexOf(btn) + 1;
+        indicator.textContent = index;
+    });
+    
+    document.getElementById('tab-basic').classList.add('active');
+    document.querySelector('[data-tab="basic"]').classList.add('active');
+    
+    updateNavigationButtons();
+    updateSummary();
+
+    document.getElementById('app-modal').style.display = 'block';
+
+    setTimeout(function() {
+        if (envEditor) {
+            envEditor.setValue(`# Configuración de entorno
+APP_ENV=%APP_ENV%
+APP_NAME=%APP_NAME%
+APP_URL=%APP_URL%
+APP_DEBUG=false
+
+# Base de datos
+DB_CONNECTION=%DB_TYPE%
+DB_HOST=%DB_HOST%
+DB_PORT=%DB_PORT%
+DB_DATABASE=%DB_NAME%
+DB_USERNAME=%DB_USER%
+DB_PASSWORD=%DB_PASS%
+
+# Otras configuraciones
+CACHE_DRIVER=file
+SESSION_DRIVER=file`);
+        }
+    }, 200);
+}
+
+// Añadir event listeners para actualizar resumen en tiempo real
+document.addEventListener('DOMContentLoaded', function() {
+    // Event listeners existentes...
+    
+    // Nuevos event listeners para actualizar resumen
+    document.getElementById('app-name').addEventListener('input', updateSummary);
+    document.getElementById('app-repository').addEventListener('input', updateSummary);
+    document.getElementById('app-hostname').addEventListener('input', updateSummary);
+    document.getElementById('app-database').addEventListener('change', updateSummary);
+});
     </script>
 </body>
 </html>
