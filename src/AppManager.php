@@ -243,9 +243,24 @@ class AppManager {
             
             // Clonar o actualizar repositorio
             if (file_exists($app['directory'] . '/.git')) {
-                // Actualizar repositorio existente
-                $output = shell_exec("cd {$app['directory']} && git pull 2>&1");
-                $logContent .= "Actualizando repositorio:\n$output\n";
+                // Actualizar repositorio existente - resetear cambios locales primero
+                $logContent .= "Reseteando cambios locales y actualizando repositorio...\n";
+
+                // Primero obtener la información del remoto
+                $output = shell_exec("cd {$app['directory']} && git fetch origin 2>&1");
+                $logContent .= "Obteniendo información del remoto:\n$output\n";
+
+                // Resetear cambios locales y actualizar
+                $output = shell_exec("cd {$app['directory']} && git reset --hard origin/HEAD 2>&1 && git pull origin 2>&1");
+                $logContent .= "Reseteando y actualizando repositorio:\n$output\n";
+
+                // Verificar el estado final
+                $status = shell_exec("cd {$app['directory']} && git status --porcelain 2>&1");
+                if (!$status || empty(trim($status))) {
+                    $logContent .= "✅ Repositorio limpio y actualizado\n";
+                } else {
+                    $logContent .= "⚠️  Estado del repositorio:\n$status\n";
+                }
             } else {
                 // Clonar repositorio
                 $output = shell_exec("git clone {$gitUrl} {$app['directory']} 2>&1");
