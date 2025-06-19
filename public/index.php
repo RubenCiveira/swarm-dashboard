@@ -199,6 +199,50 @@ $app->delete('/api/backups/{filename}', function (Request $request, Response $re
     return $response->withHeader('Content-Type', 'application/json');
 });
 
+// API Routes for Database Migrations
+$app->get('/api/migrations/status', function (Request $request, Response $response) use ($database) {
+    $currentVersion = $database->getCurrentVersion();
+    $history = $database->getVersionHistory();
+    
+    $result = [
+        'current_version' => $currentVersion,
+        'total_migrations' => count($history),
+        'recent_migrations' => array_slice($history, 0, 10)
+    ];
+    
+    $response->getBody()->write(json_encode($result));
+    return $response->withHeader('Content-Type', 'application/json');
+});
+
+$app->get('/api/migrations/history', function (Request $request, Response $response) use ($database) {
+    $history = $database->getVersionHistory();
+    
+    $response->getBody()->write(json_encode(['history' => $history]));
+    return $response->withHeader('Content-Type', 'application/json');
+});
+
+$app->post('/api/migrations/validate', function (Request $request, Response $response) use ($database) {
+    $result = $database->validateIntegrity();
+    
+    $response->getBody()->write(json_encode($result));
+    return $response->withHeader('Content-Type', 'application/json');
+});
+
+$app->post('/api/migrations/execute', function (Request $request, Response $response) use ($database) {
+    $data = $request->getParsedBody();
+    $migrations = $data['migrations'] ?? [];
+    
+    if (empty($migrations)) {
+        $response->getBody()->write(json_encode(['success' => false, 'message' => 'No se proporcionaron migraciones']));
+        return $response->withHeader('Content-Type', 'application/json')->withStatus(400);
+    }
+    
+    $result = $database->sincronizar($migrations);
+    
+    $response->getBody()->write(json_encode($result));
+    return $response->withHeader('Content-Type', 'application/json');
+});
+
 // Incluir GitCredentialManager
 require_once '../src/GitCredentialManager.php';
 $gitCredentialManager = new GitCredentialManager($database);
