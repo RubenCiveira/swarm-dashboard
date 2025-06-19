@@ -142,6 +142,38 @@ class AppManager {
         }
     }
     
+    /**
+     * Procesa las variables de plantilla en el contenido del .env
+     */
+    private function processEnvTemplate($envContent, $database) {
+        if (!$database) {
+            return $envContent;
+        }
+        
+        // Desencriptar contraseña
+        $dbPassword = $this->databaseManager->decryptPassword($database['db_password']);
+        
+        // Definir las variables de reemplazo
+        $replacements = [
+            '%DB_HOST%' => $database['db_host'],
+            '%DB_PORT%' => $database['db_port'],
+            '%DB_NAME%' => $database['db_name'],
+            '%DB_USER%' => $database['db_username'],
+            '%DB_PASS%' => $dbPassword,
+            '%DB_TYPE%' => $database['db_type'] === 'pgsql' ? 'pgsql' : 'mysql',
+            '%APP_NAME%' => '', // Se llenará en deployApp
+            '%APP_URL%' => '', // Se llenará en deployApp
+            '%APP_ENV%' => 'production'
+        ];
+        
+        // Reemplazar las variables
+        foreach ($replacements as $placeholder => $value) {
+            $envContent = str_replace($placeholder, $value, $envContent);
+        }
+        
+        return $envContent;
+    }
+    
     public function deployApp($id) {
         $app = $this->getApp($id);
         if (!$app) {
@@ -162,13 +194,13 @@ class AppManager {
             }
             $logContent .= "Versión de PHP: " . trim(explode("\n", $phpVersion)[0]) . "\n";
             
-            // Configurar base de datos si está especificada
+            // Obtener información de la base de datos si está configurada
+            $database = null;
             if (!empty($app['database_id'])) {
-                $logContent .= "\n=== CONFIGURACIÓN DE BASE DE DATOS ===\n";
-                
-                // Obtener información de la base de datos
                 $database = $this->databaseManager->getDatabase($app['database_id']);
+                
                 if ($database) {
+                    $logContent .= "\n=== CONFIGURACIÓN DE BASE DE DATOS ===\n";
                     $logContent .= "Base de datos asociada: {$database['name']} ({$database['db_type']})\n";
                     
                     // Verificar conexión primero
@@ -191,45 +223,8 @@ class AppManager {
                         $logContent .= "✅ Conexión a base de datos verificada\n";
                     }
                     
-                    // Actualizar archivo .env con datos de la base de datos
-                    if (!empty($app['env_content'])) {
-                        $envContent = $app['env_content'];
-                        
-                        // Desencriptar contraseña para el .env
-                        $dbPassword = $this->databaseManager->decryptPassword($database['db_password']);
-                        
-                        // Reemplazar o añadir variables de base de datos en el .env
-                        $dbVars = [
-                            'DB_CONNECTION' => $database['db_type'] === 'pgsql' ? 'pgsql' : 'mysql',
-                            'DB_HOST' => $database['db_host'],
-                            'DB_PORT' => $database['db_port'],
-                            'DB_DATABASE' => $database['db_name'],
-                            'DB_USERNAME' => $database['db_username'],
-                            'DB_PASSWORD' => $dbPassword
-                        ];
-                        
-                        foreach ($dbVars as $key => $value) {
-                            if (preg_match("/^{$key}=.*$/m", $envContent)) {
-                                // Reemplazar variable existente
-                                $envContent = preg_replace("/^{$key}=.*$/m", "{$key}={$value}", $envContent);
-                            } else {
-                                // Añadir variable si no existe
-                                $envContent .= "\n{$key}={$value}";
-                            }
-                        }
-                        
-                        // Actualizar el contenido del .env en la base de datos
-                        $stmt = $this->db->prepare("UPDATE apps SET env_content = ? WHERE id = ?");
-                        $stmt->execute([$envContent, $id]);
-                        
-                        $app['env_content'] = $envContent;
-                        $logContent .= "📝 Variables de base de datos añadidas al archivo .env\n";
-                    }
-                } else {
-                    $logContent .= "❌ Error: Base de datos con ID {$app['database_id']} no encontrada\n";
+                    $logContent .= "=== FIN CONFIGURACIÓN BASE DE DATOS ===\n\n";
                 }
-                
-                $logContent .= "=== FIN CONFIGURACIÓN BASE DE DATOS ===\n\n";
             }
             
             // Obtener credenciales para el repositorio
@@ -257,10 +252,28 @@ class AppManager {
                 $logContent .= "Clonando repositorio:\n$output\n";
             }
             
-            // Crear archivo .env si hay contenido
+            // Procesar archivo .env con variables de plantilla
             if (!empty($app['env_content'])) {
-                file_put_contents($app['directory'] . '/.env', $app['env_content']);
-                $logContent .= "Archivo .env creado\n";
+                $processedEnvContent = $this->processEnvTemplate($app['env_content'], $database);
+                
+                // Añadir variables adicionales de la aplicación
+                $appReplacements = [
+                    '%APP_NAME%' => $app['name'],
+                    '%APP_URL%' => "https://{$app['hostname']}"
+                ];
+                
+                foreach ($appReplacements as $placeholder => $value) {
+                    $processedEnvContent = str_replace($placeholder, $value, $processedEnvContent);
+                }
+                
+                file_put_contents($app['directory'] . '/.env', $processedEnvContent);
+                $logContent .= "Archivo .env creado con variables procesadas\n";
+                
+                // Mostrar las variables que fueron reemplazadas
+                $originalVars = preg_match_all('/%[A-Z_]+%/', $app['env_content'], $matches);
+                if (!empty($matches[0])) {
+                    $logContent .= "Variables de plantilla procesadas: " . implode(', ', array_unique($matches[0])) . "\n";
+                }
             }
             
             // Descargar Composer si no existe

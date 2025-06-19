@@ -92,6 +92,22 @@
         .btn-warning:hover {
             background: #b45309;
         }
+
+        .btn-info {
+            background: #0891b2;
+            padding: 0.5rem;
+            border-radius: 50%;
+            width: 2rem;
+            height: 2rem;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.875rem;
+        }
+
+        .btn-info:hover {
+            background: #0e7490;
+        }
         
         .apps-grid {
             display: grid;
@@ -242,6 +258,13 @@
             font-weight: 500;
             color: #374151;
         }
+
+        .form-label-with-help {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
         
         .form-input, .form-select {
             width: 100%;
@@ -379,6 +402,70 @@
             padding: 1rem;
             margin-top: 1rem;
         }
+
+        .help-popup {
+            position: absolute;
+            background: white;
+            border: 1px solid #d1d5db;
+            border-radius: 0.5rem;
+            padding: 1rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            z-index: 1001;
+            max-width: 400px;
+            display: none;
+        }
+
+        .help-popup h4 {
+            margin: 0 0 0.5rem 0;
+            color: #1f2937;
+            font-size: 1rem;
+        }
+
+        .help-popup p {
+            margin: 0 0 1rem 0;
+            color: #6b7280;
+            font-size: 0.875rem;
+            line-height: 1.4;
+        }
+
+        .help-variables {
+            background: #f9fafb;
+            border-radius: 0.25rem;
+            padding: 0.75rem;
+            margin-bottom: 1rem;
+        }
+
+        .help-variable {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 0.5rem;
+            font-family: 'Courier New', monospace;
+            font-size: 0.75rem;
+        }
+
+        .help-variable:last-child {
+            margin-bottom: 0;
+        }
+
+        .help-variable-name {
+            color: #059669;
+            font-weight: 600;
+        }
+
+        .help-variable-desc {
+            color: #6b7280;
+        }
+
+        .template-example {
+            background: #1f2937;
+            color: #f9fafb;
+            padding: 0.75rem;
+            border-radius: 0.25rem;
+            font-family: 'Courier New', monospace;
+            font-size: 0.75rem;
+            white-space: pre-line;
+            margin-bottom: 1rem;
+        }
     </style>
 </head>
 <body>
@@ -504,7 +591,10 @@
                 </div>
                 
                 <div class="form-group">
-                    <label class="form-label">Archivo .env</label>
+                    <div class="form-label-with-help">
+                        <label class="form-label">Archivo .env</label>
+                        <button type="button" class="btn btn-info" onclick="showEnvHelp(event)" title="Ayuda sobre variables de plantilla">?</button>
+                    </div>
                     <div id="env-editor" class="editor-container"></div>
                 </div>
                 
@@ -514,6 +604,65 @@
                 </div>
             </form>
         </div>
+    </div>
+
+    <!-- Popup de ayuda para variables .env -->
+    <div id="env-help-popup" class="help-popup">
+        <h4>Variables de Plantilla para .env</h4>
+        <p>Puedes usar estas variables que serán reemplazadas automáticamente durante el despliegue:</p>
+        
+        <div class="help-variables">
+            <div class="help-variable">
+                <span class="help-variable-name">%DB_HOST%</span>
+                <span class="help-variable-desc">Host de la base de datos</span>
+            </div>
+            <div class="help-variable">
+                <span class="help-variable-name">%DB_PORT%</span>
+                <span class="help-variable-desc">Puerto de la base de datos</span>
+            </div>
+            <div class="help-variable">
+                <span class="help-variable-name">%DB_NAME%</span>
+                <span class="help-variable-desc">Nombre de la base de datos</span>
+            </div>
+            <div class="help-variable">
+                <span class="help-variable-name">%DB_USER%</span>
+                <span class="help-variable-desc">Usuario de la base de datos</span>
+            </div>
+            <div class="help-variable">
+                <span class="help-variable-name">%DB_PASS%</span>
+                <span class="help-variable-desc">Contraseña de la base de datos</span>
+            </div>
+            <div class="help-variable">
+                <span class="help-variable-name">%DB_TYPE%</span>
+                <span class="help-variable-desc">Tipo de BD (mysql/pgsql)</span>
+            </div>
+            <div class="help-variable">
+                <span class="help-variable-name">%APP_NAME%</span>
+                <span class="help-variable-desc">Nombre de la aplicación</span>
+            </div>
+            <div class="help-variable">
+                <span class="help-variable-name">%APP_URL%</span>
+                <span class="help-variable-desc">URL de la aplicación</span>
+            </div>
+            <div class="help-variable">
+                <span class="help-variable-name">%APP_ENV%</span>
+                <span class="help-variable-desc">Entorno (production)</span>
+            </div>
+        </div>
+
+        <p><strong>Ejemplo de uso:</strong></p>
+        <div class="template-example">APP_ENV=%APP_ENV%
+APP_NAME=%APP_NAME%
+APP_URL=%APP_URL%
+
+DB_CONNECTION=%DB_TYPE%
+DB_HOST=%DB_HOST%
+DB_PORT=%DB_PORT%
+DB_DATABASE=%DB_NAME%
+DB_USERNAME=%DB_USER%
+DB_PASSWORD=%DB_PASS%</div>
+
+        <p><small>💡 Las variables solo se reemplazan si tienes una base de datos configurada para la aplicación.</small></p>
     </div>
     
     <!-- Modal para logs -->
@@ -690,13 +839,57 @@
         let currentCredentialId = null;
         let currentDatabaseId = null;
 
+        // Variables de plantilla disponibles
+        const templateVariables = [
+            { name: '%DB_HOST%', description: 'Host de la base de datos' },
+            { name: '%DB_PORT%', description: 'Puerto de la base de datos' },
+            { name: '%DB_NAME%', description: 'Nombre de la base de datos' },
+            { name: '%DB_USER%', description: 'Usuario de la base de datos' },
+            { name: '%DB_PASS%', description: 'Contraseña de la base de datos' },
+            { name: '%DB_TYPE%', description: 'Tipo de BD (mysql/pgsql)' },
+            { name: '%APP_NAME%', description: 'Nombre de la aplicación' },
+            { name: '%APP_URL%', description: 'URL de la aplicación' },
+            { name: '%APP_ENV%', description: 'Entorno (production)' }
+        ];
+
         // Inicializar Monaco Editor
         function initializeMonacoEditor() {
             require.config({ paths: { vs: 'https://cdn.jsdelivr.net/npm/monaco-editor@0.45.0/min/vs' } });
             require(['vs/editor/editor.main'], function () {
                 try {
+                    // Registrar proveedor de autocompletado
+                    monaco.languages.registerCompletionItemProvider('shell', {
+                        provideCompletionItems: function(model, position) {
+                            const suggestions = templateVariables.map(variable => ({
+                                label: variable.name,
+                                kind: monaco.languages.CompletionItemKind.Variable,
+                                insertText: variable.name,
+                                documentation: variable.description,
+                                detail: 'Variable de plantilla'
+                            }));
+
+                            return { suggestions: suggestions };
+                        }
+                    });
+
                     envEditor = monaco.editor.create(document.getElementById('env-editor'), {
-                        value: '# Configuración de entorno\nAPP_ENV=production\nAPP_DEBUG=false\n\n# Base de datos\nDB_HOST=localhost\nDB_DATABASE=mi_app\nDB_USERNAME=usuario\nDB_PASSWORD=contraseña\n\n# Otras configuraciones\nAPP_URL=https://mi-app.com',
+                        value: `# Configuración de entorno
+APP_ENV=%APP_ENV%
+APP_NAME=%APP_NAME%
+APP_URL=%APP_URL%
+APP_DEBUG=false
+
+# Base de datos
+DB_CONNECTION=%DB_TYPE%
+DB_HOST=%DB_HOST%
+DB_PORT=%DB_PORT%
+DB_DATABASE=%DB_NAME%
+DB_USERNAME=%DB_USER%
+DB_PASSWORD=%DB_PASS%
+
+# Otras configuraciones
+CACHE_DRIVER=file
+SESSION_DRIVER=file`,
                         language: 'shell',
                         theme: 'vs-light',
                         minimap: { enabled: false },
@@ -705,10 +898,16 @@
                         lineNumbers: 'on',
                         wordWrap: 'on',
                         automaticLayout: false,
-                        fixedOverflowWidgets: true
+                        fixedOverflowWidgets: true,
+                        suggestOnTriggerCharacters: true,
+                        quickSuggestions: {
+                            other: true,
+                            comments: false,
+                            strings: true
+                        }
                     });
 
-                    console.log('Monaco Editor inicializado correctamente');
+                    console.log('Monaco Editor inicializado correctamente con autocompletado');
                 } catch (error) {
                     console.error('Error inicializando Monaco Editor:', error);
                     createFallbackEditor();
@@ -723,17 +922,22 @@
                     id="env-textarea-fallback" 
                     style="width: 100%; height: 300px; min-height: 300px; border: none; outline: none; resize: none; font-family: 'Courier New', monospace; font-size: 14px; padding: 10px; box-sizing: border-box;"
                     placeholder="# Configuración de entorno
-APP_ENV=production
+APP_ENV=%APP_ENV%
+APP_NAME=%APP_NAME%
+APP_URL=%APP_URL%
 APP_DEBUG=false
 
 # Base de datos
-DB_HOST=localhost
-DB_DATABASE=mi_app
-DB_USERNAME=usuario
-DB_PASSWORD=contraseña
+DB_CONNECTION=%DB_TYPE%
+DB_HOST=%DB_HOST%
+DB_PORT=%DB_PORT%
+DB_DATABASE=%DB_NAME%
+DB_USERNAME=%DB_USER%
+DB_PASSWORD=%DB_PASS%
 
 # Otras configuraciones
-APP_URL=https://mi-app.com"
+CACHE_DRIVER=file
+SESSION_DRIVER=file"
                 ></textarea>
             `;
 
@@ -750,6 +954,27 @@ APP_URL=https://mi-app.com"
             };
 
             console.log('Editor fallback creado');
+        }
+
+        function showEnvHelp(event) {
+            event.preventDefault();
+            const popup = document.getElementById('env-help-popup');
+            const button = event.target;
+            const rect = button.getBoundingClientRect();
+            
+            popup.style.display = 'block';
+            popup.style.left = (rect.left - 200) + 'px';
+            popup.style.top = (rect.bottom + 10) + 'px';
+            
+            // Cerrar popup al hacer clic fuera
+            setTimeout(() => {
+                document.addEventListener('click', function closePopup(e) {
+                    if (!popup.contains(e.target) && e.target !== button) {
+                        popup.style.display = 'none';
+                        document.removeEventListener('click', closePopup);
+                    }
+                });
+            }, 100);
         }
 
         // Cargar aplicaciones al iniciar
@@ -933,7 +1158,23 @@ APP_URL=https://mi-app.com"
 
             setTimeout(function() {
                 if (envEditor) {
-                    envEditor.setValue('# Configuración de entorno\nAPP_ENV=production\nAPP_DEBUG=false\n\n# Base de datos\nDB_HOST=localhost\nDB_DATABASE=mi_app\nDB_USERNAME=usuario\nDB_PASSWORD=contraseña\n\n# Otras configuraciones\nAPP_URL=https://mi-app.com');
+                    envEditor.setValue(`# Configuración de entorno
+APP_ENV=%APP_ENV%
+APP_NAME=%APP_NAME%
+APP_URL=%APP_URL%
+APP_DEBUG=false
+
+# Base de datos
+DB_CONNECTION=%DB_TYPE%
+DB_HOST=%DB_HOST%
+DB_PORT=%DB_PORT%
+DB_DATABASE=%DB_NAME%
+DB_USERNAME=%DB_USER%
+DB_PASSWORD=%DB_PASS%
+
+# Otras configuraciones
+CACHE_DRIVER=file
+SESSION_DRIVER=file`);
                     
                     if (envEditor.layout) {
                         envEditor.layout();
@@ -962,7 +1203,23 @@ APP_URL=https://mi-app.com"
 
                 setTimeout(function() {
                     if (envEditor) {
-                        envEditor.setValue(app.env_content || '# Configuración de entorno\nAPP_ENV=production\nAPP_DEBUG=false\n\n# Base de datos\nDB_HOST=localhost\nDB_DATABASE=mi_app\nDB_USERNAME=usuario\nDB_PASSWORD=contraseña');
+                        envEditor.setValue(app.env_content || `# Configuración de entorno
+APP_ENV=%APP_ENV%
+APP_NAME=%APP_NAME%
+APP_URL=%APP_URL%
+APP_DEBUG=false
+
+# Base de datos
+DB_CONNECTION=%DB_TYPE%
+DB_HOST=%DB_HOST%
+DB_PORT=%DB_PORT%
+DB_DATABASE=%DB_NAME%
+DB_USERNAME=%DB_USER%
+DB_PASSWORD=%DB_PASS%
+
+# Otras configuraciones
+CACHE_DRIVER=file
+SESSION_DRIVER=file`);
                         
                         if (envEditor.layout) {
                             envEditor.layout();
