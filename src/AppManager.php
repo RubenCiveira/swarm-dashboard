@@ -51,8 +51,8 @@ class AppManager {
             $directory = ConfigManager::getDirectoryForHostname($data['hostname']);
         
             $stmt = $this->db->prepare("
-                INSERT INTO apps (name, repository, hostname, directory, database_id, env_content, git_credential_id, custom_git_token) 
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                INSERT INTO apps (name, repository, hostname, directory, database_id, env_content, git_credential_id, custom_git_token, log_type, log_path, trace_type, trace_path) 
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             ");
             
             // Encriptar token personalizado si existe
@@ -60,7 +60,6 @@ class AppManager {
             if (!empty($data['custom_git_token'])) {
                 $customToken = $this->gitCredentialManager->encryptToken($data['custom_git_token']);
             }
-            
             $stmt->execute([
                 $data['name'],
                 $data['repository'],
@@ -69,6 +68,11 @@ class AppManager {
                 $data['database_id'] ?? null,
                 $data['env_content'],
                 $data['git_credential_id'] ?? null,
+                $data['custom_git_token'] ?? null,
+                $data['log_type'] ?? null,
+                $data['log_path'] ?? null,
+                $data['trace_type'] ?? null,
+                $data['trace_path'] ?? null,
                 $customToken
             ]);
             
@@ -104,7 +108,7 @@ class AppManager {
             $stmt = $this->db->prepare("
                 UPDATE apps 
                 SET name = ?, repository = ?, hostname = ?, directory = ?, 
-                    database_id = ?, env_content = ?, updated_at = CURRENT_TIMESTAMP
+                    database_id = ?, env_content = ?, git_credential_id = ?, custom_git_token = ?, log_type = ?, log_path = ?, trace_type = ?, trace_path = ?, updated_at = CURRENT_TIMESTAMP
                 WHERE id = ?
             ");
             
@@ -115,6 +119,12 @@ class AppManager {
                 $directory,
                 $data['database_id'] ?? null,
                 $data['env_content'],
+                $data['git_credential_id'] ?? null,
+                $data['custom_git_token'] ?? null,
+                $data['log_type'] ?? null,
+                $data['log_path'] ?? null,
+                $data['trace_type'] ?? null,
+                $data['trace_path'] ?? null,
                 $id
             ]);
             

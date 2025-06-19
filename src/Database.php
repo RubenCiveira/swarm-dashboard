@@ -14,8 +14,9 @@ class Database
 
         $this->createVersionTableIfNeeded();
         $this->setMigrations([
-            '1.0.0' => $this->v0(),
-            '1.1.0' => $this->v1(),
+            '1.0.0' => $this->v1_0_0(),
+            '1.1.0' => $this->v1_1_0(),
+            '1.2.0' => $this->v1_2_0()
         ]);
         $this->applyMigrations();
     }
@@ -73,7 +74,7 @@ class Database
     }
 
 
-    private function v0()
+    private function v1_0_0()
     {
         return "
         CREATE TABLE IF NOT EXISTS databases (
@@ -139,8 +140,16 @@ class Database
         CREATE INDEX IF NOT EXISTS idx_deployment_logs_date ON deployment_logs(deployment_date);
         ";
     }
-    private function v1(): string
+    private function v1_1_0(): string
     {
         return "ALTER TABLE databases ADD COLUMN quantity_backups INTEGER DEFAULT 0;";
+    }
+
+    private function v1_2_0(): string
+    {
+        return " ALTER TABLE apps ADD COLUMN log_type TEXT DEFAULT NULL;
+        ALTER TABLE apps ADD COLUMN log_path TEXT DEFAULT NULL;
+        ALTER TABLE apps ADD COLUMN trace_type TEXT DEFAULT NULL;
+        ALTER TABLE apps ADD COLUMN trace_path TEXT DEFAULT NULL;";
     }
 }

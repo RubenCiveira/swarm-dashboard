@@ -37,6 +37,35 @@ $app->get('/', function (Request $request, Response $response) {
     return $response->withHeader('Content-Type', 'text/html');
 });
 
+// API Routes for observability
+$app->get('/api/logs/{id}', function (Request $request, Response $response, $args) use ($appManager) {
+    $app = $appManager->getApp($args['id']);
+    $type = $app['log_type'];
+    $path = $app['log_path'];
+    if( 'mono-json' == $type ) {
+        require_once '../src/log/MonologJson.php';
+        $data = read_logs( $app['directory'] . $path, $request->getQueryParams());
+        $response->getBody()->write(json_encode($data));
+        return $response->withHeader('Content-Type', 'application/json');
+    } else {
+        return $response->withStatus(404);
+    }
+});
+$app->get('/api/traces/{id}', function (Request $request, Response $response, $args) use ($appManager) {
+    $app = $appManager->getApp($args['id']);
+    $type = $app['trace_type'];
+    $path = $app['trace_path'];
+    if( 'otel-json' == $type ) {
+        require_once '../src/trace/OtelJson.php';
+        $data = read_traces( $app['directory'] .$path, $request->getQueryParams());
+        $response->getBody()->write(json_encode($data));
+        return $response->withHeader('Content-Type', 'application/json');
+    } else {
+        return $response->withStatus(404);
+    }
+
+});
+
 // API Routes for Apps
 $app->get('/api/apps', function (Request $request, Response $response) use ($appManager) {
     $apps = $appManager->getAllApps();
@@ -51,8 +80,14 @@ $app->post('/api/apps', function (Request $request, Response $response) use ($ap
         'name' => $data['name'],
         'repository' => $data['repository'],
         'hostname' => $data['hostname'],
+        'git_credential_id' => $data['git_credential_id'] ?? null,
+        'custom_git_token' => $data['custom_git_token'] ?? null,
         'database_id' => $data['database_id'] ?? null,
-        'env_content' => $data['env_content'] ?? ''
+        'env_content' => $data['env_content'] ?? '',
+        'log_type' => $data['log_type'] ?? '',
+        'log_path' => $data['log_path'] ?? '',
+        'trace_type' => $data['trace_type'] ?? '',
+        'trace_path' => $data['trace_path'] ?? '',
     ]);
     
     if ($result['success']) {

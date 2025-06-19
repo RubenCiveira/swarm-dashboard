@@ -703,10 +703,20 @@
               <button
                 type="button"
                 class="tab-button"
+                data-tab="observability"
+                onclick="switchTab('observability')"
+              >
+                <span class="step-indicator">3</span>
+                <span class="tab-icon">🗄️</span>
+                Observabilidad
+              </button>
+              <button
+                type="button"
+                class="tab-button"
                 data-tab="environment"
                 onclick="switchTab('environment')"
               >
-                <span class="step-indicator">3</span>
+                <span class="step-indicator">4</span>
                 <span class="tab-icon">⚙️</span>
                 Variables de Entorno
               </button>
@@ -937,7 +947,45 @@
               </div>
             </div>
 
-            <!-- Pestaña 3: Variables de Entorno -->
+            <!-- Pestaña 4: Observability -->
+            <div id="tab-observability" class="tab-content">
+              <div class="form-group">
+                <label for="app-log-type" class="form-label">Tipo de log</label>
+                <select id="app-log-type" name="log_type" class="form-select">
+                  <option value="none">Ninguno</option>
+                  <option value="mono-json">Mono-json</option>
+                </select>
+              </div>
+
+               <div class="form-group">
+                <label for="app-log-path" class="form-label">Path de log</label>
+                <input
+                      type="text"
+                      id="app-log-path"
+                      class="form-input"
+                      placeholder="Path for logs"
+                    />
+              </div>
+
+              <div class="form-group">
+                <label for="app-trace-type" class="form-label">Tipo de traza</label>
+                <select id="app-trace-type" name="trace_type" class="form-select">
+                  <option value="none">Ninguno</option>
+                  <option value="otel-json">Otel-json</option>
+                </select>
+              </div>
+
+              <div class="form-group">
+                <label for="app-trace-path" class="form-label">Path de trazas</label>
+                <input
+                      type="text"
+                      id="app-trace-path"
+                      class="form-input"
+                      placeholder="Path for traces"
+                    />
+              </div>
+            </div>
+            <!-- Pestaña 4: Variables de Entorno -->
             <div id="tab-environment" class="tab-content">
               <div class="form-group">
                 <div class="form-label-with-help">
@@ -2198,6 +2246,10 @@ SESSION_DRIVER=file`
             name: document.getElementById("app-name").value,
             repository: document.getElementById("app-repository").value,
             hostname: document.getElementById("app-hostname").value,
+            log_type: document.getElementById("app-log-type").value,
+            log_path: document.getElementById("app-log-path").value,
+            trace_type: document.getElementById("app-trace-type").value,
+            trace_path: document.getElementById("app-trace-path").value,
             database_id: document.getElementById("app-database").value || null,
             env_content: envEditor ? envEditor.getValue() : "",
             git_credential_id:
@@ -2429,6 +2481,7 @@ SESSION_DRIVER=file`
 
         // Marcar pestaña actual como completada
         completedTabs.add(currentTab);
+        console.log( completedTabs );
 
         // Ocultar pestaña actual
         document.getElementById(`tab-${currentTab}`).classList.remove("active");
@@ -2463,7 +2516,7 @@ SESSION_DRIVER=file`
           return;
         }
 
-        const tabs = ["basic", "database", "environment"];
+        const tabs = ["basic", "database", "observability", "environment"];
         const currentIndex = tabs.indexOf(currentTab);
 
         if (currentIndex < tabs.length - 1) {
@@ -2472,7 +2525,7 @@ SESSION_DRIVER=file`
       }
 
       function previousTab() {
-        const tabs = ["basic", "database", "environment"];
+        const tabs = ["basic", "database", "observability", "environment"];
         const currentIndex = tabs.indexOf(currentTab);
 
         if (currentIndex > 0) {
@@ -2548,7 +2601,7 @@ SESSION_DRIVER=file`
       }
 
       function updateTabIndicators() {
-        const tabs = ["basic", "database", "environment"];
+        const tabs = ["basic", "database", "observability", "environment"];
 
         tabs.forEach((tab) => {
           const button = document.querySelector(`[data-tab="${tab}"]`);
@@ -2729,6 +2782,7 @@ SESSION_DRIVER=file`);
       async function connectDatabase(id) {
         document.location = './adminer/' + id;
       }
+
       async function dropDatabase(id) {
         if (
           !confirm(
