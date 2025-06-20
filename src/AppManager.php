@@ -110,7 +110,10 @@ class AppManager {
                     database_id = ?, env_content = ?, git_credential_id = ?, custom_git_token = ?, log_type = ?, log_path = ?, trace_type = ?, trace_path = ?, updated_at = CURRENT_TIMESTAMP
                 WHERE id = ?
             ");
-            
+            $customToken = null;
+            if (!empty($data['custom_git_token'])) {
+                $customToken = $this->gitCredentialManager->encryptToken($data['custom_git_token']);
+            }
             $stmt->execute([
                 $data['name'],
                 $data['repository'],
@@ -119,7 +122,7 @@ class AppManager {
                 $data['database_id'] ?? null,
                 $data['env_content'],
                 $data['git_credential_id'] ?? null,
-                $data['custom_git_token'] ?? null,
+                $customToken,
                 $data['log_type'] ?? null,
                 $data['log_path'] ?? null,
                 $data['trace_type'] ?? null,
