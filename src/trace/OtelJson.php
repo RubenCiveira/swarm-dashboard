@@ -31,7 +31,7 @@ function read_traces($path, $params = [])
                 continue;
             }
             $results[] = $span;
-            if( count($result) > 1000 ) {
+            if( count($results) > 1000 ) {
                 break;
             }
         }

@@ -1752,15 +1752,36 @@ SESSION_DRIVER=file"
                         })">Editar</button>
                         <button class="btn btn-secondary" onclick="viewLogs(${
                           app.id
-                        })">Logs</button>
+                        })">Deploy logs</button>
                         <button class="btn btn-danger" onclick="deleteApp(${
                           app.id
                         })">Eliminar</button>
+                        <div class="btn-group btn-group-sm" role="group">
+                        <button
+                          type="button"
+                          class="btn btn-secondary dropdown-toggle"
+                          data-bs-toggle="dropdown"
+                          aria-expanded="false"
+                        >
+                          Más
+                        </button>
+                        <ul class="dropdown-menu">
+                          <li><a class="dropdown-item" href="#" onclick="viewAppLogs(${
+                            app.id
+                          })">App logs</a></li>
+                          <li><a class="dropdown-item" href="#" onclick="viewAppTraces(${
+                            app.id
+                          })">App trace</a></li>
+                        </ul>
+                      </div>
                     </div>
                 </div>
             `
           )
           .join("");
+          document.querySelectorAll('[data-bs-toggle="dropdown"]').forEach((el) => {
+            new bootstrap.Dropdown(el);
+            });
       }
 
       async function loadCredentialsSelect() {
@@ -2780,7 +2801,16 @@ SESSION_DRIVER=file`);
       }
 
       async function connectDatabase(id) {
-        document.location = './adminer/' + id;
+        window.open('./adminer/' + id, 'adminer');
+      }
+
+      async function viewAppLogs(id) {
+        window.open('./logs/' + id, 'adminer');
+
+      }
+      
+      async function viewAppTrace(id) {
+        window.open('./traces/' + id, 'adminer');
       }
 
       async function dropDatabase(id) {

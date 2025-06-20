@@ -38,6 +38,13 @@ $app->get('/', function (Request $request, Response $response) {
 });
 
 // API Routes for observability
+$app->get('/logs/{id}', function (Request $request, Response $response, $args) use ($appManager) {
+    $app = $appManager->getApp($args['id']);
+    $html = file_get_contents(__DIR__ . '/../templates/logger.html');
+    $response->getBody()->write(str_replace('{{id}}', $app['id'], $html) );
+    return $response->withHeader('Content-Type', 'text/html');
+
+});
 $app->get('/api/logs/{id}', function (Request $request, Response $response, $args) use ($appManager) {
     $app = $appManager->getApp($args['id']);
     $type = $app['log_type'];
