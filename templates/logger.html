@@ -150,7 +150,7 @@
         if (traceId) params.append("trace-id", traceId);
         if (spanId) params.append("span-id", spanId);
 
-        const url = `../api/logs/1?${params.toString()}`;
+        const url = `../api/logs/{{id}}?${params.toString()}`;
         fetchLogs(url);
       }
 
@@ -169,11 +169,21 @@
         th.addEventListener("click", () => sortBy(th.dataset.sort));
       });
 
+    function debounce(fn, delay) {
+        let timeout;
+        return function(...args) {
+        clearTimeout(timeout);
+        timeout = setTimeout(() => fn.apply(this, args), delay);
+        };
+    }
+
+      const loadRootSpansDebounced = debounce(applyFilters, 300); // 300 ms
+
       ["search", "levelFilter", "traceIdFilter", "spanIdFilter"].forEach((id) =>
-        document.getElementById(id).addEventListener("input", applyFilters)
+        document.getElementById(id).addEventListener("input", loadRootSpansDebounced)
       );
 
-      async function fetchLogs(url = "../api/logs/1") {
+      async function fetchLogs(url = "../api/logs/{{id}}") {
         try {
           const response = await fetch(url);
           const data = await response.json();
