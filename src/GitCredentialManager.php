@@ -163,7 +163,7 @@ class GitCredentialManager {
         // Construir URL con credenciales
         if ($credential['provider'] === 'github' || $credential['provider'] === 'custom') {
             // Para GitHub: https://token@github.com/user/repo.git
-            return "https://{$credential['token']}@{$host}{$path}";
+            return "https://x-access-token:{$credential['token']}@{$host}{$path}";
         } elseif ($credential['provider'] === 'gitlab') {
             // Para GitLab: https://oauth2:token@gitlab.com/user/repo.git
             return "https://oauth2:{$credential['token']}@{$host}{$path}";
