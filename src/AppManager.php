@@ -68,12 +68,11 @@ class AppManager {
                 $data['database_id'] ?? null,
                 $data['env_content'],
                 $data['git_credential_id'] ?? null,
-                $data['custom_git_token'] ?? null,
+                $customToken,
                 $data['log_type'] ?? null,
                 $data['log_path'] ?? null,
                 $data['trace_type'] ?? null,
                 $data['trace_path'] ?? null,
-                $customToken
             ]);
             
             $appId = $this->db->lastInsertId();
