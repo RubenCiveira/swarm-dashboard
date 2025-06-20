@@ -246,6 +246,8 @@ class AppManager {
             if ($credential) {
                 $logContent .= "Usando credenciales para repositorio privado\n";
             }
+
+            $logContent .= " WARN: " . $gitUrl;
             
             // Crear directorio si no existe
             if (!file_exists($app['directory'])) {
