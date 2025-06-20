@@ -155,25 +155,46 @@ class GitCredentialManager {
         if (!$credential) {
             return $repository; // Repositorio público
         }
-        // Construir URL con credenciales
-        $askPassScript = sys_get_temp_dir() . '/askpass-' . uniqid() . '.sh';
-        file_put_contents($askPassScript, "#!/bin/sh\necho {$credential['token']}\n");
-        chmod($askPassScript, 0700);
+
+        $parsedUrl = parse_url($repository);
+        $host = $parsedUrl['host'];
+        $credentialUrl = "https://oauth2:{$credential['token']}@{$host}";
+        // if ($credential['provider'] === 'github' || $credential['provider'] === 'custom') {
+        //     // Para GitHub: https://token@github.com/user/repo.git
+        //     $credentialUrl = "https://RubenCiveira:{$credential['token']}@{$host}{$path}";
+        // } elseif ($credential['provider'] === 'gitlab') {
+        //     // Para GitLab: https://oauth2:token@gitlab.com/user/repo.git
+        //     $credentialUrl = "https://oauth2:{$credential['token']}@{$host}{$path}";
+        // }
+        
+        $tmpHome = sys_get_temp_dir() . '/git-home-' . uniqid();
+        mkdir($tmpHome, 0700);
+        
+        $gitConfigDir = "{$tmpHome}/.git-credentials";
+        $gitConfigFile = "{$tmpHome}/.gitconfig";
+        
+        // Guardar las credenciales en el formato de Git
+        file_put_contents($gitConfigDir, $credentialUrl);
+        
+        // Crear la configuración para usar el helper `store` apuntando al archivo
+        file_put_contents($gitConfigFile, <<<EOT
+        [credential]
+            helper = store
+        EOT);
+        // Limpieza
+        register_shutdown_function(function () use ($gitConfigDir, $gitConfigFile, $tmpHome) {
+            @unlink($gitConfigDir);
+            @unlink($gitConfigFile);
+            @rmdir($tmpHome);
+        });
+
         $env = [
-            'GIT_ASKPASS' => $askPassScript,
-            'GIT_TERMINAL_PROMPT' => '0', // Desactiva prompt interactivo
-            'GIT_USERNAME' => 'git', // Algunos scripts usan esto
+            'HOME' => $tmpHome,
         ];
         $envString = '';
         foreach ($env as $k => $v) {
             $envString .= "$k=" . escapeshellarg($v) . ' ';
         }
-        // Borrar al finalizar
-        register_shutdown_function(function () use ($askPassScript) {
-            if (file_exists($askPassScript)) {
-                unlink($askPassScript);
-            }
-        });
         return [$envString, $repository];
     }
     
