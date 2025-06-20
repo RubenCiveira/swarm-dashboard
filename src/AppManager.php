@@ -241,13 +241,11 @@ class AppManager {
             
             // Obtener credenciales para el repositorio
             $credential = $this->gitCredentialManager->getCredentialForApp($id);
-            $gitUrl = $this->gitCredentialManager->buildGitUrl($app['repository'], $credential);
-            
+            [$envGit, $gitUrl] = $this->gitCredentialManager->buildGitUrl($app['repository'], $credential);
+
             if ($credential) {
                 $logContent .= "Usando credenciales para repositorio privado\n";
             }
-
-            $logContent .= " WARN: " . $gitUrl;
             
             // Crear directorio si no existe
             if (!file_exists($app['directory'])) {
@@ -261,15 +259,15 @@ class AppManager {
                 $logContent .= "Reseteando cambios locales y actualizando repositorio...\n";
 
                 // Primero obtener la información del remoto
-                $output = shell_exec("cd {$app['directory']} && git fetch origin 2>&1");
+                $output = shell_exec("cd {$app['directory']} && ".$envGit . " git fetch origin 2>&1");
                 $logContent .= "Obteniendo información del remoto:\n$output\n";
 
                 // Resetear cambios locales y actualizar
-                $output = shell_exec("cd {$app['directory']} && git reset --hard origin/HEAD 2>&1 && git pull origin 2>&1");
+                $output = shell_exec("cd {$app['directory']} && ".$envGit . " git reset --hard origin/HEAD 2>&1 && ".$envGit . " git pull origin 2>&1");
                 $logContent .= "Reseteando y actualizando repositorio:\n$output\n";
 
                 // Verificar el estado final
-                $status = shell_exec("cd {$app['directory']} && git status --porcelain 2>&1");
+                $status = shell_exec("cd {$app['directory']} && ".$envGit . " git status --porcelain 2>&1");
                 if (!$status || empty(trim($status))) {
                     $logContent .= "✅ Repositorio limpio y actualizado\n";
                 } else {
@@ -277,7 +275,7 @@ class AppManager {
                 }
             } else {
                 // Clonar repositorio
-                $output = shell_exec("git clone {$gitUrl} {$app['directory']} 2>&1");
+                $output = shell_exec($envGit . " git clone {$gitUrl} {$app['directory']} 2>&1");
                 $logContent .= "Clonando repositorio:\n$output\n";
             }
             

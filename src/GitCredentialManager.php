@@ -155,21 +155,26 @@ class GitCredentialManager {
         if (!$credential) {
             return $repository; // Repositorio público
         }
-        
-        $parsedUrl = parse_url($repository);
-        $host = $parsedUrl['host'];
-        $path = $parsedUrl['path'];
-        
         // Construir URL con credenciales
-        if ($credential['provider'] === 'github' || $credential['provider'] === 'custom') {
-            // Para GitHub: https://token@github.com/user/repo.git
-            return "https://x-access-token:{$credential['token']}@{$host}{$path}";
-        } elseif ($credential['provider'] === 'gitlab') {
-            // Para GitLab: https://oauth2:token@gitlab.com/user/repo.git
-            return "https://oauth2:{$credential['token']}@{$host}{$path}";
+        $askPassScript = sys_get_temp_dir() . '/askpass-' . uniqid() . '.sh';
+        file_put_contents($askPassScript, "#!/bin/sh\necho {$credential['token']}\n");
+        chmod($askPassScript, 0700);
+        $env = [
+            'GIT_ASKPASS' => $askPassScript,
+            'GIT_TERMINAL_PROMPT' => '0', // Desactiva prompt interactivo
+            'GIT_USERNAME' => 'git', // Algunos scripts usan esto
+        ];
+        $envString = '';
+        foreach ($env as $k => $v) {
+            $envString .= "$k=" . escapeshellarg($v) . ' ';
         }
-        
-        return $repository;
+        // Borrar al finalizar
+        register_shutdown_function(function () use ($askPassScript) {
+            if (file_exists($askPassScript)) {
+                unlink($askPassScript);
+            }
+        });
+        return [$envString, $repository];
     }
     
     public function encryptToken($token) {
