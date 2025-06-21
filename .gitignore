@@ -1,6 +1,8 @@
 # Composer
 /vendor/
 /cache/
+/bin/
+/data/
 composer.lock
 
 # Entornos y Configuración
@@ -24,3 +26,4 @@ logs/
 storage/
 data/apps.db
 composer.phar
+.gitignore
