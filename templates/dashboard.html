@@ -1690,6 +1690,7 @@
           editors[id] = editor;
           editor.onDidChangeModelContent(() => saveAllFiles());
         }, 0);
+        return false;
       }
 
       function deleteEditorFile(id) {
