@@ -51,7 +51,7 @@ class AppManager {
             $directory = ConfigManager::getDirectoryForHostname($data['hostname']);
         
             $stmt = $this->db->prepare("
-                INSERT INTO apps (name, repository, hostname, directory, database_id, env_content, git_credential_id, custom_git_token, log_type, log_path, trace_type, trace_path) 
+                INSERT INTO apps (name, repository, hostname, directory, database_id, config_maps, git_credential_id, custom_git_token, log_type, log_path, trace_type, trace_path) 
                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             ");
             
@@ -66,7 +66,7 @@ class AppManager {
                 $data['hostname'],
                 $directory,
                 $data['database_id'] ?? null,
-                $data['env_content'],
+                $data['config_maps'] ?? '',
                 $data['git_credential_id'] ?? null,
                 $customToken,
                 $data['log_type'] ?? null,
@@ -107,7 +107,7 @@ class AppManager {
             $stmt = $this->db->prepare("
                 UPDATE apps 
                 SET name = ?, repository = ?, hostname = ?, directory = ?, 
-                    database_id = ?, env_content = ?, git_credential_id = ?, custom_git_token = ?, log_type = ?, log_path = ?, trace_type = ?, trace_path = ?, updated_at = CURRENT_TIMESTAMP
+                    database_id = ?, config_maps = ?, git_credential_id = ?, custom_git_token = ?, log_type = ?, log_path = ?, trace_type = ?, trace_path = ?, updated_at = CURRENT_TIMESTAMP
                 WHERE id = ?
             ");
             $customToken = null;
@@ -120,7 +120,7 @@ class AppManager {
                 $data['hostname'],
                 $directory,
                 $data['database_id'] ?? null,
-                $data['env_content'],
+                $data['config_maps'],
                 $data['git_credential_id'] ?? null,
                 $customToken,
                 $data['log_type'] ?? null,
@@ -280,26 +280,30 @@ class AppManager {
             }
             
             // Procesar archivo .env con variables de plantilla
-            if (!empty($app['env_content'])) {
-                $processedEnvContent = $this->processEnvTemplate($app['env_content'], $database);
-                
-                // Añadir variables adicionales de la aplicación
-                $appReplacements = [
-                    '%APP_NAME%' => $app['name'],
-                    '%APP_URL%' => "https://{$app['hostname']}"
-                ];
-                
-                foreach ($appReplacements as $placeholder => $value) {
-                    $processedEnvContent = str_replace($placeholder, $value, $processedEnvContent);
-                }
-                
-                file_put_contents($app['directory'] . '/.env', $processedEnvContent);
-                $logContent .= "Archivo .env creado con variables procesadas\n";
-                
-                // Mostrar las variables que fueron reemplazadas
-                $originalVars = preg_match_all('/%[A-Z_]+%/', $app['env_content'], $matches);
-                if (!empty($matches[0])) {
-                    $logContent .= "Variables de plantilla procesadas: " . implode(', ', array_unique($matches[0])) . "\n";
+            if (!empty($app['config_maps'])) {
+                $files = json_decode($app['config_maps'], true);
+                foreach($files as $filename => $filecontent) {
+
+                    $processedEnvContent = $this->processEnvTemplate($filecontent, $database);
+                    
+                    // Añadir variables adicionales de la aplicación
+                    $appReplacements = [
+                        '%APP_NAME%' => $app['name'],
+                        '%APP_URL%' => "https://{$app['hostname']}"
+                    ];
+                    
+                    foreach ($appReplacements as $placeholder => $value) {
+                        $processedEnvContent = str_replace($placeholder, $value, $processedEnvContent);
+                    }
+                    
+                    file_put_contents($app['directory'] . '/' . $filename, $processedEnvContent);
+                    $logContent .= "Archivo $filename creado con variables procesadas\n";
+                    
+                    // Mostrar las variables que fueron reemplazadas
+                    preg_match_all('/%[A-Z_]+%/', $filecontent, $matches);
+                    if (!empty($matches[0])) {
+                        $logContent .= "Variables de plantilla {$filename} en procesadas: " . implode(', ', array_unique($matches[0])) . "\n";
+                    }
                 }
             }
 

@@ -16,7 +16,8 @@ class Database
         $this->setMigrations([
             '1.0.0' => $this->v1_0_0(),
             '1.1.0' => $this->v1_1_0(),
-            '1.2.0' => $this->v1_2_0()
+            '1.2.0' => $this->v1_2_0(),
+            '2.0.0' => $this->v2_0_0()
         ]);
         $this->applyMigrations();
     }
@@ -151,5 +152,54 @@ class Database
         ALTER TABLE apps ADD COLUMN log_path TEXT DEFAULT NULL;
         ALTER TABLE apps ADD COLUMN trace_type TEXT DEFAULT NULL;
         ALTER TABLE apps ADD COLUMN trace_path TEXT DEFAULT NULL;";
+    }
+
+    private function v2_0_0(): string
+    {
+          return "
+    PRAGMA foreign_keys=off;
+
+    BEGIN TRANSACTION;
+
+    CREATE TABLE apps_new (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        name TEXT NOT NULL UNIQUE,
+        repository TEXT NOT NULL,
+        hostname TEXT NOT NULL,
+        directory TEXT NOT NULL,
+        database_id INTEGER,
+        config_maps TEXT,
+        git_credential_id INTEGER,
+        custom_git_token TEXT,
+        status TEXT DEFAULT 'inactive',
+        last_deployment DATETIME,
+        log_type TEXT DEFAULT NULL,
+        log_path TEXT DEFAULT NULL,
+        trace_type TEXT DEFAULT NULL,
+        trace_path TEXT DEFAULT NULL,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (git_credential_id) REFERENCES git_credentials(id),
+        FOREIGN KEY (database_id) REFERENCES databases(id)
+    );
+
+    INSERT INTO apps_new (
+        id, name, repository, hostname, directory, database_id,
+        git_credential_id, custom_git_token, status, last_deployment,
+        log_type, log_path, trace_type, trace_path, created_at, updated_at
+    )
+    SELECT 
+        id, name, repository, hostname, directory, database_id,
+        git_credential_id, custom_git_token, status, last_deployment,
+        log_type, log_path, trace_type, trace_path, created_at, updated_at
+    FROM apps;
+
+    DROP TABLE apps;
+    ALTER TABLE apps_new RENAME TO apps;
+
+    COMMIT;
+
+    PRAGMA foreign_keys=on;
+    ";
     }
 }

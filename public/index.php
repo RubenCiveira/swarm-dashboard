@@ -95,7 +95,7 @@ $app->post('/api/apps', function (Request $request, Response $response) use ($ap
         'git_credential_id' => $data['git_credential_id'] ?? null,
         'custom_git_token' => $data['custom_git_token'] ?? null,
         'database_id' => $data['database_id'] ?? null,
-        'env_content' => $data['env_content'] ?? '',
+        'config_maps' => $data['config_maps'] ?? '',
         'log_type' => $data['log_type'] ?? '',
         'log_path' => $data['log_path'] ?? '',
         'trace_type' => $data['trace_type'] ?? '',
