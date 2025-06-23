@@ -80,9 +80,9 @@ function deployWithAngular($app)
     $log .= "Archivos copiados a directorio public/\n";
 
     // Limpiar node_modules para ahorrar espacio
-    // shell_exec("rm -rf {$app['directory']}/packages-lock.json");
-    // shell_exec("rm -rf {$app['directory']}/node_modules");
-    // shell_exec("rm -rf {$app['directory']}/{$outputPath}");
+    shell_exec("rm -rf {$app['directory']}/packages-lock.json");
+    shell_exec("rm -rf {$app['directory']}/node_modules");
+    shell_exec("rm -rf {$app['directory']}/{$outputPath}");
     $log .= "Limpieza de node_modules completada\n";
 
     return $log;
