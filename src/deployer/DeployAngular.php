@@ -35,12 +35,16 @@ function deployWithAngular($app)
         $log .= "Node y npm instalados localmente en bin/\n";
     }
     putenv("PATH=$binDir:" . getenv("PATH"));
+    putenv("HOME=$binDir");
 
     // Verificar que angular.json existe
     if (!file_exists($app['directory'] . '/angular.json')) {
         return "No se encontró angular.json en {$app['directory']}";
     }
 
+    $log .= "Limpieando cache de npm...\n";
+    $cmd = "cd {$app['directory']} && {$nodeBin} {$npmBin} cache clean --force 2>&1";
+    $log .= shell_exec($cmd);
     $log .= "Instalando dependencias Angular con npm...\n";
     $cmd = "cd {$app['directory']} && {$nodeBin} {$npmBin} install --no-audit --no-fund 2>&1";
     $log .= shell_exec($cmd);
