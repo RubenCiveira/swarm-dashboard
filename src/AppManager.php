@@ -186,6 +186,26 @@ class AppManager {
         return $envContent;
     }
     
+    public function cleanApp($id) {
+        $app = $this->getApp($id);
+        if (!$app) {
+            return ['success' => false, 'message' => 'Aplicación no encontrada'];
+        }
+        $logContent = "Iniciando borrado para {$app['name']}\n";
+        if (file_exists($app['directory'])) {
+            if ($this->deleteDirectory($app['directory'])) {
+                $logContent .= "Directorio borrado: {$app['directory']}\n";
+            } else {
+                $logContent .= "⚠️ Error borrando el directorio: {$app['directory']}\n";
+            }
+        }
+        return [
+            'success' => true, 
+            'message' => 'Despliegue completado exitosamente',
+            'logs' => $logContent
+        ];
+    }
+
     public function deployApp($id) {
         $app = $this->getApp($id);
         if (!$app) {
@@ -366,6 +386,16 @@ class AppManager {
         ");
         $stmt->execute([$appId, $limit]);
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    private function deleteDirectory(string $dir): bool {
+        if (!is_dir($dir)) return false;
+        $items = array_diff(scandir($dir), ['.', '..']);
+        foreach ($items as $item) {
+            $path = "$dir/$item";
+            is_dir($path) ? $this->deleteDirectory($path) : unlink($path);
+        }
+        return rmdir($dir);
     }
 }
 ?>

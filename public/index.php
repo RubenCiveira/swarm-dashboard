@@ -135,6 +135,12 @@ $app->delete('/api/apps/{id}', function (Request $request, Response $response, $
     return $response->withHeader('Content-Type', 'application/json');
 });
 
+$app->post('/api/apps/{id}/clean', function (Request $request, Response $response, $args) use ($appManager) {
+    $result = $appManager->cleanApp($args['id']);
+    $response->getBody()->write(json_encode($result));
+    return $response->withHeader('Content-Type', 'application/json');
+});
+
 $app->post('/api/apps/{id}/deploy', function (Request $request, Response $response, $args) use ($appManager) {
     $result = $appManager->deployApp($args['id']);
     $response->getBody()->write(json_encode($result));

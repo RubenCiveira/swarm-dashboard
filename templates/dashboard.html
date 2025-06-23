@@ -1836,6 +1836,9 @@
                           Más
                         </button>
                         <ul class="dropdown-menu">
+                          <li><a class="dropdown-item" href="#" onclick="cleanApp(${
+                            app.id
+                          })">Clean</a></li>
                           <li><a class="dropdown-item" href="#" onclick="viewAppLogs(${
                             app.id
                           })">App logs</a></li>
@@ -2427,6 +2430,29 @@
         });
 
       // Funciones de despliegue y logs
+      async function cleanApp(id) {
+        if( confirm("Confirm to clean and remove all local files.") ) {
+          try {
+            const response = await fetch(`./api/apps/${id}/clean`, {
+              method: "POST",
+            });
+            const result = await response.json();
+
+            if (result.success) {
+              alert("Despliegue completado exitosamente");
+              loadApps();
+            } else {
+              alert("Error en el limpiado: " + result.message);
+            }
+
+            if (result.logs) {
+              console.log("Logs del limpiado:", result.logs);
+            }
+          } catch (error) {
+            alert("Error durante el limpiado: " + error.message);
+          }
+        }
+      }
       async function deployApp(id) {
         const deployBtn = document.getElementById(`deploy-btn-${id}`);
         deployBtn.innerHTML = '<span class="loading"></span> Desplegando...';
