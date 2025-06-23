@@ -300,33 +300,7 @@ class AppManager {
             }
             
             // Procesar archivo .env con variables de plantilla
-            if (!empty($app['config_maps'])) {
-                $files = json_decode($app['config_maps'], true);
-                foreach($files as $filename => $filecontent) {
-
-                    $processedEnvContent = $this->processEnvTemplate($filecontent, $database);
-                    
-                    // Añadir variables adicionales de la aplicación
-                    $appReplacements = [
-                        '%APP_NAME%' => $app['name'],
-                        '%APP_URL%' => "https://{$app['hostname']}"
-                    ];
-                    
-                    foreach ($appReplacements as $placeholder => $value) {
-                        $processedEnvContent = str_replace($placeholder, $value, $processedEnvContent);
-                    }
-                    
-                    file_put_contents($app['directory'] . '/' . $filename, $processedEnvContent);
-                    $logContent .= "Archivo $filename creado con variables procesadas\n";
-                    
-                    // Mostrar las variables que fueron reemplazadas
-                    preg_match_all('/%[A-Z_]+%/', $filecontent, $matches);
-                    if (!empty($matches[0])) {
-                        $logContent .= "Variables de plantilla {$filename} en procesadas: " . implode(', ', array_unique($matches[0])) . "\n";
-                    }
-                }
-            }
-
+            $this->deployConfigMaps($app, $database);
             if (file_exists($app['directory'] . '/composer.json')) {
                 require_once '../src/deployer/DeployComposer.php';
                 $logContent .= deployWithComposer($app);
@@ -334,6 +308,7 @@ class AppManager {
                 require_once '../src/deployer/DeployAngular.php';
                 $logContent .= deployWithAngular($app);
             }
+            $this->deployConfigMaps($app, $database);
             
             // Establecer permisos
             shell_exec("chown -R www-data:www-data {$app['directory']} 2>/dev/null");
@@ -369,6 +344,37 @@ class AppManager {
                 'logs' => $logContent
             ];
         }
+    }
+
+    private function deployConfigMaps($app, $database): string {
+        $logContent = "";
+        if (!empty($app['config_maps'])) {
+            $files = json_decode($app['config_maps'], true);
+            foreach($files as $filename => $filecontent) {
+
+                $processedEnvContent = $this->processEnvTemplate($filecontent, $database);
+                
+                // Añadir variables adicionales de la aplicación
+                $appReplacements = [
+                    '%APP_NAME%' => $app['name'],
+                    '%APP_URL%' => "https://{$app['hostname']}"
+                ];
+                
+                foreach ($appReplacements as $placeholder => $value) {
+                    $processedEnvContent = str_replace($placeholder, $value, $processedEnvContent);
+                }
+                
+                file_put_contents($app['directory'] . '/' . $filename, $processedEnvContent);
+                $logContent .= "Archivo $filename creado con variables procesadas\n";
+                
+                // Mostrar las variables que fueron reemplazadas
+                preg_match_all('/%[A-Z_]+%/', $filecontent, $matches);
+                if (!empty($matches[0])) {
+                    $logContent .= "Variables de plantilla {$filename} en procesadas: " . implode(', ', array_unique($matches[0])) . "\n";
+                }
+            }
+        }
+        return $logContent;
     }
     
     private function saveDeploymentLog($appId, $logContent) {
