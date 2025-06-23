@@ -360,7 +360,10 @@ class AppManager {
                 foreach ($appReplacements as $placeholder => $value) {
                     $processedEnvContent = str_replace($placeholder, $value, $processedEnvContent);
                 }
-                
+                $on = dirname($app['directory'] . '/' . $filename );
+                if( !is_dir($on) ) {
+                    mkdir($on, 0777, true);
+                }
                 file_put_contents($app['directory'] . '/' . $filename, $processedEnvContent);
                 $logContent .= "Archivo $filename creado con variables procesadas\n";
                 
