@@ -301,6 +301,7 @@ class AppManager {
             
             // Procesar archivo .env con variables de plantilla
             $this->deployConfigMaps($app, $database);
+
             if (file_exists($app['directory'] . '/composer.json')) {
                 require_once '../src/deployer/DeployComposer.php';
                 $logContent .= deployWithComposer($app);
@@ -311,9 +312,6 @@ class AppManager {
             $this->deployConfigMaps($app, $database);
             
             // Establecer permisos
-            shell_exec("chown -R www-data:www-data {$app['directory']} 2>/dev/null");
-            shell_exec("chmod -R 755 {$app['directory']}");
-            $logContent .= "Permisos establecidos\n";
             
             // Actualizar estado de la aplicación
             $stmt = $this->db->prepare("
@@ -374,6 +372,9 @@ class AppManager {
                 }
             }
         }
+        shell_exec("chown -R www-data:www-data {$app['directory']} 2>/dev/null");
+        shell_exec("chmod -R 755 {$app['directory']}");
+        $logContent .= "Permisos establecidos\n";
         return $logContent;
     }
     
