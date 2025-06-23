@@ -301,7 +301,6 @@ class AppManager {
             
             // Procesar archivo .env con variables de plantilla
             $this->deployConfigMaps($app, $database);
-
             if (file_exists($app['directory'] . '/composer.json')) {
                 require_once '../src/deployer/DeployComposer.php';
                 $logContent .= deployWithComposer($app);
