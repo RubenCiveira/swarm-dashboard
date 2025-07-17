@@ -184,9 +184,9 @@ class GitCredentialManager {
         EOT);
         // Limpieza
         register_shutdown_function(function () use ($gitConfigDir, $gitConfigFile, $tmpHome) {
-            // @unlink($gitConfigDir);
-            // @unlink($gitConfigFile);
-            // @rmdir($tmpHome);
+            @unlink($gitConfigDir);
+            @unlink($gitConfigFile);
+            @rmdir($tmpHome);
         });
 
         $env = [
