@@ -264,7 +264,7 @@ class AppManager {
             [$envGit, $gitUrl] = $this->gitCredentialManager->buildGitUrl($app['repository'], $credential);
 
             if ($credential) {
-                $logContent .= "Usando credenciales para repositorio privado\n";
+                $logContent .= "Usando credenciales con $envGit para repositorio privado $gitUrl\n";
             }
             
             // Crear directorio si no existe
