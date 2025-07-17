@@ -159,9 +159,11 @@ class GitCredentialManager {
         $parsedUrl = parse_url($repository);
         $host = $parsedUrl['host'];
         $credentialUrl = "https://oauth2:{$credential['token']}@{$host}";
-        // if ($credential['provider'] === 'github' || $credential['provider'] === 'custom') {
+        if ($credential['provider'] === 'github' || $credential['provider'] === 'custom') {
+            $credentialUrl = "https://{$credential['token']}@{$host}";
         //     // Para GitHub: https://token@github.com/user/repo.git
         //     $credentialUrl = "https://RubenCiveira:{$credential['token']}@{$host}{$path}";
+        }
         // } elseif ($credential['provider'] === 'gitlab') {
         //     // Para GitLab: https://oauth2:token@gitlab.com/user/repo.git
         //     $credentialUrl = "https://oauth2:{$credential['token']}@{$host}{$path}";
