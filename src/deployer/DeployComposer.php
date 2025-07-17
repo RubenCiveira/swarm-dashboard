@@ -42,6 +42,7 @@ function deployWithComposer($app)
         }
     }
 
+    $hasLock = file_exists("{$app['directory']}/composer.lock");
     // Instalar dependencias si existe composer.json
     // if (file_exists($app['directory'] . '/composer.json')) {
     if ($composerPath && file_exists($composerPath)) {
@@ -54,6 +55,9 @@ function deployWithComposer($app)
         $composerCmd = "composer install --no-dev --optimize-autoloader --no-interaction";
         $output = shell_exec("cd {$app['directory']} && {$composerCmd} 2>&1");
         $logContent .= "Instalando dependencias con Composer del sistema:\n$output\n";
+    }
+    if( !$hasLock && file_exists("{$app['directory']}/composer.lock") ) {
+        unlink("{$app['directory']}/composer.lock");
     }
     return $logContent;
 }
