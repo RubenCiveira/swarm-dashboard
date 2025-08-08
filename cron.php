@@ -6,6 +6,9 @@ require_once './src/AppManager.php';
 use Cron\CronExpression;
 
 function logCronExecution(PDO $db, $appName, $status, $responseTime = null, $response = null) {
+    $query = "DELETE FROM cron_executions WHERE timestamp < datetime('now', '-1 day')";
+    $db->exec($query);
+
     $query = "INSERT INTO cron_executions (app_name, status, response_time, response)
               VALUES (:app_name, :status, :response_time, :response)";
 
