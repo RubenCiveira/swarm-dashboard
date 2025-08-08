@@ -17,7 +17,10 @@ class Database
             '1.0.0' => $this->v1_0_0(),
             '1.1.0' => $this->v1_1_0(),
             '1.2.0' => $this->v1_2_0(),
-            '2.0.0' => $this->v2_0_0()
+            '2.0.0' => $this->v2_0_0(),
+            '2.1.0' => $this->v2_1_0(),
+            '2.1.1' => $this->v2_1_1(),
+            '2.1.2' => $this->v2_1_2(),
         ]);
         $this->applyMigrations();
     }
@@ -99,7 +102,7 @@ class Database
             repository TEXT NOT NULL,
             hostname TEXT NOT NULL,
             directory TEXT NOT NULL,
-            database_id INTEGER,
+            database_id INTEGER,d
             env_content TEXT,
             git_credential_id INTEGER,
             custom_git_token TEXT,
@@ -202,4 +205,31 @@ class Database
     PRAGMA foreign_keys=on;
     ";
     }
+
+    private function v2_1_0(): string
+    {
+        return <<<SQL
+            ALTER TABLE apps ADD COLUMN cron_path TEXT DEFAULT NULL;
+            SQL;
+    }
+    private function v2_1_1(): string
+    {
+        return <<<SQL
+            ALTER TABLE apps ADD COLUMN cron_period TEXT DEFAULT NULL;
+            SQL;
+    }
+    private function v2_1_2(): string
+    {
+        return <<<SQL
+            CREATE TABLE cron_executions (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                app_name TEXT NOT NULL,
+                timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
+                status TEXT NOT NULL,  -- Puede ser "success", "failure", "error", etc.
+                response_time INTEGER,  -- Tiempo de respuesta en milisegundos
+                response TEXT           -- Cuerpo de la respuesta o código de estado (opcional)
+            );
+            SQL;
+    }
+
 }

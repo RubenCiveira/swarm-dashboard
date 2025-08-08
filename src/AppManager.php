@@ -51,8 +51,8 @@ class AppManager {
             $directory = ConfigManager::getDirectoryForHostname($data['hostname']);
         
             $stmt = $this->db->prepare("
-                INSERT INTO apps (name, repository, hostname, directory, database_id, config_maps, git_credential_id, custom_git_token, log_type, log_path, trace_type, trace_path) 
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                INSERT INTO apps (name, repository, hostname, directory, database_id, config_maps, git_credential_id, custom_git_token, log_type, log_path, trace_type, trace_path, cron_path, cron_period) 
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             ");
             
             // Encriptar token personalizado si existe
@@ -73,6 +73,8 @@ class AppManager {
                 $data['log_path'] ?? null,
                 $data['trace_type'] ?? null,
                 $data['trace_path'] ?? null,
+                $data['cron_path'] ?? null,
+                $data['cron_period'] ?? null,
             ]);
             
             $appId = $this->db->lastInsertId();
@@ -107,7 +109,7 @@ class AppManager {
             $stmt = $this->db->prepare("
                 UPDATE apps 
                 SET name = ?, repository = ?, hostname = ?, directory = ?, 
-                    database_id = ?, config_maps = ?, git_credential_id = ?, custom_git_token = ?, log_type = ?, log_path = ?, trace_type = ?, trace_path = ?, updated_at = CURRENT_TIMESTAMP
+                    database_id = ?, config_maps = ?, git_credential_id = ?, custom_git_token = ?, log_type = ?, log_path = ?, trace_type = ?, trace_path = ?, cron_path = ?, cron_period = ?, updated_at = CURRENT_TIMESTAMP
                 WHERE id = ?
             ");
             $customToken = null;
@@ -127,6 +129,8 @@ class AppManager {
                 $data['log_path'] ?? null,
                 $data['trace_type'] ?? null,
                 $data['trace_path'] ?? null,
+                $data['cron_path'] ?? null,
+                $data['cron_period'] ?? null,
                 $id
             ]);
             

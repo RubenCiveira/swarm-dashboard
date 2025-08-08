@@ -953,6 +953,37 @@
             <!-- Pestaña 4: Observability -->
             <div id="tab-observability" class="tab-content">
               <div class="form-group">
+                <label for="app-log-type" class="form-label">Path local de cron (ping cada minuto)</label>
+                <input
+                  type="text"
+                  id="app-cron-path"
+                  class="form-input"
+                  placeholder="Path of the url to invoke the cron"
+                />
+              </div>
+
+              <div class="form-group">
+                <label for="app-cron-scheduler" class="form-label">Path local de cron (ping cada minuto)</label>
+                <select id="app-cron-scheduler-select" class="form-select" onchange="toggleCronInput()">
+                  <option value="">Seleccionar Periodicidad</option>
+                  <option value="* * * * *">Cada minuto</option>
+                  <option value="*/5 * * * *">Cada 5 minutos</option>
+                  <option value="0 * * * *">Cada hora</option>
+                  <option value="0 0 * * *">Cada día a medianoche</option>
+                  <option value="0 0 * * 0">Cada domingo a medianoche</option>
+                  <option value="other">Otras (escribir manualmente)</option>
+                </select>
+                
+                <input
+                  type="text"
+                  id="app-cron-scheduler"
+                  class="form-input"
+                  placeholder="Escribe tu expresión cron aquí"
+                  style="display: none;"
+                />
+              </div>
+
+              <div class="form-group">
                 <label for="app-log-type" class="form-label">Tipo de log</label>
                 <select id="app-log-type" name="log_type" class="form-select">
                   <option value="none">Ninguno</option>
@@ -1555,6 +1586,20 @@
         document.getElementById("new-db-description").value = "";
       }
 
+      function toggleCronInput() {
+        const cronSelect = document.getElementById("app-cron-scheduler-select");
+        const cronInput = document.getElementById("app-cron-scheduler");
+
+        // Si se selecciona "Otras", mostrar el input para escribir manualmente
+        if (cronSelect.value === "other") {
+          cronInput.style.display = "block";
+          cronInput.value = "";  // Limpiar el campo si el usuario selecciona "Otras"
+        } else {
+          cronInput.style.display = "none";
+          cronInput.value = cronSelect.value;  // Actualizar el input con el valor del cron seleccionado
+        }
+      }
+      
       async function createNewDatabase() {
         const formData = {
           name: document.getElementById("new-db-name").value,
@@ -1924,10 +1969,45 @@
           document.getElementById("app-custom-token").value = "";
           document.getElementById("new-database-form").style.display = "none";
           document.getElementById("app-modal").style.display = "block";
+          document.getElementById("app-cron-path").value = app.cron_path;
+          document.getElementById("app-cron-scheduler").value = app.cron_period;
+          
+          document.getElementById("app-cron-scheduler").value = app.cron_period;
+          document.getElementById("app-log-type").value = app.log_type;
+          document.getElementById("app-log-path").value = app.log_path;
+          document.getElementById("app-trace-type").value = app.trace_type;
+          document.getElementById("app-trace-path").value = app.trace_path;
           document.getElementById("configMapInput").value = app.config_maps;
+
+          setCronSchedulerValue(app.cron_period);
           loadFiles();
         } catch (error) {
           alert("Error cargando la aplicación: " + error.message);
+        }
+      }
+
+      function setCronSchedulerValue(cronScheduler) {
+        const cronSelect = document.getElementById("app-cron-scheduler-select");
+        const cronInput = document.getElementById("app-cron-scheduler");
+
+        // Supongamos que app.cron_period contiene la expresión cron
+        // Obtener todas las opciones del select
+        const options = Array.from(cronSelect.options).map(option => option.value);
+
+        // Comprobar si el valor de cronScheduler coincide con una de las opciones
+        if (options.includes(cronScheduler)) {
+          // Si coincide, asignar el valor al select
+          cronSelect.value = cronScheduler;
+          cronInput.style.display = "none"; // Ocultar el input de "otros"
+        } else if( cronScheduler ) {
+          // Si no coincide, seleccionar "otros" y mostrar el input
+          cronSelect.value = "other";
+          cronInput.style.display = "block"; // Mostrar el input de "otros"
+          cronInput.value = cronScheduler;  // Asignar el valor del cron a la caja de texto
+        } else {
+          cronSelect.value = "";
+          cronInput.style.display = "none"; // Mostrar el input de "otros"
+          cronInput.value = "";  // Asignar el valor del cron a la caja de texto
         }
       }
 
@@ -2290,6 +2370,8 @@
             name: document.getElementById("app-name").value,
             repository: document.getElementById("app-repository").value,
             hostname: document.getElementById("app-hostname").value,
+            cron_path: document.getElementById("app-cron-path").value,
+            cron_period: document.getElementById("app-cron-scheduler").value,
             log_type: document.getElementById("app-log-type").value,
             log_path: document.getElementById("app-log-path").value,
             trace_type: document.getElementById("app-trace-type").value,
