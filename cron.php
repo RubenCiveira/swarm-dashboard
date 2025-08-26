@@ -1,7 +1,7 @@
 <?php
-require_once './vendor/autoload.php';
-require_once './src/Database.php';
-require_once './src/AppManager.php';
+require_once __DIR__ . '/vendor/autoload.php';
+require_once __DIR__ . '/src/Database.php';
+require_once __DIR__ . '/src/AppManager.php';
 
 use Cron\CronExpression;
 
