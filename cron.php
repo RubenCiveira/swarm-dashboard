@@ -73,9 +73,12 @@ foreach ($applications as $app) {
         echo " - Has it " . $cronPeriod . " and ".$lastExecution."\n";
         // Si la próxima ejecución es menor o igual a la hora actual, ejecutar el cron
         if (!$lastExecution || $nextExecutionTime <= time()) {
-            echo " - Run it on ".'http://' . $app['hostname']. '.civeira.net/' . $cronPath."\n";
+            if( $cronPath[0] === '/' ) {
+                $cronPath = '/' . $cronPath;
+            }
+            echo " - Run it on ".'https://' . $app['hostname']. '.civeira.net' . $cronPath."\n";
             // Realizar el ping HTTP
-            $url = 'http://' . $app['hostname']. '.civeira.net/' . $cronPath; // La URL de la aplicación para hacer el ping
+            $url = 'https://' . $app['hostname']. '.civeira.net' . $cronPath; // La URL de la aplicación para hacer el ping
             $pingResult = pingApp($url);
 
             print_r( $pingResult );
