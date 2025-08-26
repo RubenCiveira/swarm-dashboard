@@ -74,7 +74,7 @@ foreach ($applications as $app) {
         $cron = new CronExpression($cronPeriod);
         $nextExecutionTime = $cron->getNextRunDate(date('Y-m-d H:i:s', $lastExecutionTime))->getTimestamp();
 
-        echo " - Has it " . $cronPeriod . " and ".$lastExecution."\n";
+        echo " - Has it " . $cronPeriod . " and ".($lastExecution ? $lastExecutionTime : '-')."\n";
         // Si la próxima ejecución es menor o igual a la hora actual, ejecutar el cron
         if (!$lastExecution || $nextExecutionTime <= time()) {
             if( $cronPath[0] !== '/' ) {
