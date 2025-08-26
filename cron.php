@@ -73,7 +73,7 @@ foreach ($applications as $app) {
         echo " - Has it " . $cronPeriod . " and ".$lastExecution."\n";
         // Si la próxima ejecución es menor o igual a la hora actual, ejecutar el cron
         if (!$lastExecution || $nextExecutionTime <= time()) {
-            if( $cronPath[0] === '/' ) {
+            if( $cronPath[0] !== '/' ) {
                 $cronPath = '/' . $cronPath;
             }
             echo " - Run it on ".'https://' . $app['hostname']. '.civeira.net' . $cronPath."\n";
