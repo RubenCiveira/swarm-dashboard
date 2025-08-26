@@ -36,7 +36,11 @@ function pingApp($url) {
     // Aquí usamos cURL como ejemplo
     $ch = curl_init($url);
     curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-    curl_setopt($ch, CURLOPT_TIMEOUT, 1);
+    curl_setopt($ch, CURLOPT_TIMEOUT, 3);
+    // Seguir redirecciones (301, 302, etc.)
+    curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
+    // Número máximo de redirecciones a seguir
+    curl_setopt($ch, CURLOPT_MAXREDIRS, 5);
     $response = curl_exec($ch);
     $httpStatus = curl_getinfo($ch, CURLINFO_HTTP_CODE);
     curl_close($ch);
