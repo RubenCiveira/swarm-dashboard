@@ -53,6 +53,19 @@ class Access implements MiddlewareInterface
         if (in_array($route, $rutasPermitidas)) {
             return $handler->handle($request);
         }
+        // Las rutas de API con token Bearer ya fueron autenticadas por ApiTokenMiddleware
+        if ($request->getAttribute('api_user') !== null) {
+            return $handler->handle($request);
+        }
+        // El CLI necesita llamar a estos endpoints sin sesión para iniciar el flujo de login
+        $publicApiRoutes = [
+            $this->basePath . '/api/auth/login-request',
+        ];
+        foreach ($publicApiRoutes as $publicRoute) {
+            if (str_starts_with($route, $publicRoute)) {
+                return $handler->handle($request);
+            }
+        }
         $user = $this->getUsername();
         if (!$user) {
             $response = new Response();

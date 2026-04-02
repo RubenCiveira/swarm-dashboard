@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Autorizar CLI — Swarm Dashboard</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <style>
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        background: #f5f5f5;
+        color: #333;
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+      }
+      .header {
+        background: #2563eb;
+        color: white;
+        padding: 1rem 2rem;
+      }
+      .header h1 { font-size: 1.25rem; font-weight: 600; margin: 0; }
+      .card-approve {
+        max-width: 480px;
+        margin: 4rem auto;
+        background: white;
+        border-radius: 8px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        padding: 2rem;
+      }
+      .code-badge {
+        font-family: monospace;
+        font-size: 1.5rem;
+        letter-spacing: 0.2em;
+        background: #f0f4ff;
+        border: 1px solid #c7d7fd;
+        color: #2563eb;
+        padding: 0.5rem 1.25rem;
+        border-radius: 6px;
+        display: inline-block;
+      }
+      .btn-approve {
+        background: #2563eb;
+        color: white;
+        border: none;
+        padding: 0.65rem 2rem;
+        border-radius: 6px;
+        font-size: 1rem;
+        cursor: pointer;
+        width: 100%;
+      }
+      .btn-approve:hover { background: #1d4ed8; }
+      .btn-deny {
+        background: white;
+        color: #dc2626;
+        border: 1px solid #dc2626;
+        padding: 0.65rem 2rem;
+        border-radius: 6px;
+        font-size: 1rem;
+        cursor: pointer;
+        width: 100%;
+      }
+      .btn-deny:hover { background: #fef2f2; }
+      .state-success { display: none; text-align: center; }
+      .state-denied  { display: none; text-align: center; }
+      .state-expired { display: none; text-align: center; }
+    </style>
+  </head>
+  <body>
+    <div class="header">
+      <h1>Swarm Dashboard</h1>
+    </div>
+
+    <div class="card-approve" id="card-main">
+      <h4 class="mb-1">Autorizar acceso desde CLI</h4>
+      <p class="text-muted mb-3" style="font-size:0.9rem;">
+        Se está solicitando acceso a <strong>Swarm Dashboard</strong> desde la línea de comandos.
+      </p>
+
+      <div class="mb-3 text-center">
+        <div class="text-muted mb-1" style="font-size:0.8rem;">Código de verificación</div>
+        <span class="code-badge">{{code}}</span>
+      </div>
+
+      <div class="mb-4 p-3 rounded" style="background:#f9fafb; border:1px solid #e5e7eb; font-size:0.9rem;">
+        <div><strong>Usuario:</strong> {{name}}</div>
+        <div><strong>Email:</strong> {{email}}</div>
+      </div>
+
+      <p class="text-muted mb-3" style="font-size:0.85rem;">
+        Al autorizar, se generará un token de acceso que el CLI almacenará localmente.
+        Puedes revocar este token en cualquier momento desde el dashboard.
+      </p>
+
+      <div class="d-flex flex-column gap-2">
+        <button class="btn-approve" onclick="approve()">Autorizar CLI</button>
+        <button class="btn-deny" onclick="deny()">Denegar</button>
+      </div>
+    </div>
+
+    <div class="card-approve state-success" id="card-success">
+      <div style="font-size:3rem; text-align:center;">✓</div>
+      <h4 class="text-center mt-2 mb-2" style="color:#16a34a;">Acceso autorizado</h4>
+      <p class="text-center text-muted" style="font-size:0.9rem;">
+        Puedes cerrar esta ventana. El CLI se ha autenticado correctamente.
+      </p>
+    </div>
+
+    <div class="card-approve state-denied" id="card-denied">
+      <div style="font-size:3rem; text-align:center;">✕</div>
+      <h4 class="text-center mt-2 mb-2" style="color:#dc2626;">Acceso denegado</h4>
+      <p class="text-center text-muted" style="font-size:0.9rem;">
+        Has rechazado la solicitud de acceso. Puedes cerrar esta ventana.
+      </p>
+    </div>
+
+    <div class="card-approve state-expired" id="card-expired">
+      <div style="font-size:3rem; text-align:center;">⏱</div>
+      <h4 class="text-center mt-2 mb-2">Código expirado</h4>
+      <p class="text-center text-muted" style="font-size:0.9rem;">
+        Este enlace ha expirado. Ejecuta <code>swarm login</code> de nuevo para obtener un nuevo código.
+      </p>
+    </div>
+
+    <script>
+      const CODE = '{{code}}';
+
+      function getBasePath() {
+        const path = window.location.pathname;
+        const idx = path.indexOf('/auth/approve/');
+        return idx >= 0 ? path.substring(0, idx) : '';
+      }
+
+      async function approve() {
+        const res = await fetch(getBasePath() + '/api/auth/login-request/' + CODE + '/approve', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+        });
+        const data = await res.json();
+        if (res.status === 410) {
+          show('card-expired');
+        } else if (data.success) {
+          show('card-success');
+        } else {
+          alert('Error: ' + (data.error ?? 'desconocido'));
+        }
+      }
+
+      function deny() {
+        show('card-denied');
+      }
+
+      function show(id) {
+        document.getElementById('card-main').style.display = 'none';
+        document.getElementById(id).style.display = 'block';
+      }
+    </script>
+  </body>
+</html>

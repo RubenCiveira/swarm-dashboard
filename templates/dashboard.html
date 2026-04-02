@@ -662,6 +662,9 @@
         <button class="btn btn-warning" onclick="openDatabasesModal()">
           Gestionar Bases de Datos
         </button>
+        <button class="btn btn-secondary" onclick="openTokensModal()">
+          Tokens de API
+        </button>
       </div>
 
       <div id="apps-container" class="apps-grid">
@@ -3005,6 +3008,116 @@
           }
         } catch (error) {
           alert("Error gestionando backups: " + error.message);
+        }
+      }
+    </script>
+
+    <!-- Modal Tokens de API -->
+    <div id="tokens-modal" class="modal">
+      <div class="modal-content" style="max-width:620px">
+        <div class="modal-header">
+          <h2 class="modal-title">Tokens de API</h2>
+          <button class="modal-close" onclick="closeTokensModal()">&times;</button>
+        </div>
+        <div class="modal-body">
+          <p class="text-muted" style="font-size:0.9rem;margin-bottom:1rem;">
+            Los tokens permiten que el CLI de Swarm se autentique sin navegador.
+            Guarda el token al crearlo — no se volverá a mostrar.
+          </p>
+
+          <div style="display:flex;gap:0.5rem;margin-bottom:1.25rem;">
+            <input id="token-label" type="text" class="form-control" placeholder='Etiqueta (ej: "laptop-dev")' style="flex:1" />
+            <input id="token-expires" type="number" class="form-control" placeholder="Días hasta expirar (vacío = no expira)" style="width:260px" />
+            <button class="btn" onclick="createApiToken()">Generar</button>
+          </div>
+
+          <div id="token-new-result" style="display:none;margin-bottom:1rem;padding:0.75rem 1rem;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:6px;">
+            <div style="font-size:0.8rem;color:#16a34a;font-weight:600;margin-bottom:0.25rem;">Token generado — cópialo ahora, no se volverá a mostrar</div>
+            <code id="token-new-value" style="word-break:break-all;font-size:0.85rem;"></code>
+          </div>
+
+          <div id="tokens-list">
+            <div class="text-muted" style="font-size:0.9rem;">Cargando...</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      async function openTokensModal() {
+        document.getElementById("tokens-modal").style.display = "flex";
+        document.getElementById("token-new-result").style.display = "none";
+        await loadTokensList();
+      }
+
+      function closeTokensModal() {
+        document.getElementById("tokens-modal").style.display = "none";
+      }
+
+      async function loadTokensList() {
+        const container = document.getElementById("tokens-list");
+        try {
+          const res = await fetch("./api/auth/tokens");
+          const tokens = await res.json();
+          if (!tokens.length) {
+            container.innerHTML = '<div class="text-muted" style="font-size:0.9rem;">No hay tokens creados.</div>';
+            return;
+          }
+          container.innerHTML = `
+            <table style="width:100%;border-collapse:collapse;font-size:0.875rem;">
+              <thead>
+                <tr style="border-bottom:1px solid #e5e7eb;text-align:left;">
+                  <th style="padding:0.4rem 0.5rem;">Etiqueta</th>
+                  <th style="padding:0.4rem 0.5rem;">Creado</th>
+                  <th style="padding:0.4rem 0.5rem;">Expira</th>
+                  <th style="padding:0.4rem 0.5rem;"></th>
+                </tr>
+              </thead>
+              <tbody>
+                ${tokens.map(t => `
+                  <tr style="border-bottom:1px solid #f3f4f6;">
+                    <td style="padding:0.4rem 0.5rem;">${t.label ?? '<em class="text-muted">sin etiqueta</em>'}</td>
+                    <td style="padding:0.4rem 0.5rem;">${t.created_at}</td>
+                    <td style="padding:0.4rem 0.5rem;">${t.expires_at ?? '—'}</td>
+                    <td style="padding:0.4rem 0.5rem;text-align:right;">
+                      <button class="btn btn-danger" style="padding:0.2rem 0.6rem;font-size:0.8rem;" onclick="revokeToken(${t.id})">Revocar</button>
+                    </td>
+                  </tr>`).join('')}
+              </tbody>
+            </table>`;
+        } catch (e) {
+          container.innerHTML = `<div class="text-muted">Error cargando tokens: ${e.message}</div>`;
+        }
+      }
+
+      async function createApiToken() {
+        const label = document.getElementById("token-label").value.trim() || null;
+        const days  = document.getElementById("token-expires").value.trim() || null;
+        const body  = { label };
+        if (days) body.expires_in_days = parseInt(days);
+
+        const res = await fetch("./api/auth/token", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(body),
+        });
+        const data = await res.json();
+        if (!res.ok) { alert("Error: " + (data.error ?? "desconocido")); return; }
+
+        document.getElementById("token-new-value").textContent = data.token;
+        document.getElementById("token-new-result").style.display = "block";
+        document.getElementById("token-label").value = "";
+        document.getElementById("token-expires").value = "";
+        await loadTokensList();
+      }
+
+      async function revokeToken(id) {
+        if (!confirm("¿Revocar este token? La acción no se puede deshacer.")) return;
+        const res = await fetch(`./api/auth/tokens/${id}`, { method: "DELETE" });
+        if (res.ok) {
+          await loadTokensList();
+        } else {
+          alert("Error revocando el token");
         }
       }
     </script>

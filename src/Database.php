@@ -21,6 +21,7 @@ class Database
             '2.1.0' => $this->v2_1_0(),
             '2.1.1' => $this->v2_1_1(),
             '2.1.2' => $this->v2_1_2(),
+            '2.2.0' => $this->v2_2_0(),
         ]);
         $this->applyMigrations();
     }
@@ -229,6 +230,35 @@ class Database
                 response_time INTEGER,  -- Tiempo de respuesta en milisegundos
                 response TEXT           -- Cuerpo de la respuesta o código de estado (opcional)
             );
+            SQL;
+    }
+
+    private function v2_2_0(): string
+    {
+        return <<<SQL
+            CREATE TABLE IF NOT EXISTS api_tokens (
+                id         INTEGER PRIMARY KEY AUTOINCREMENT,
+                token      TEXT NOT NULL UNIQUE,
+                email      TEXT NOT NULL,
+                name       TEXT NOT NULL,
+                label      TEXT,
+                expires_at TEXT,
+                created_at TEXT NOT NULL DEFAULT (datetime('now'))
+            );
+
+            CREATE TABLE IF NOT EXISTS login_requests (
+                id         INTEGER PRIMARY KEY AUTOINCREMENT,
+                code       TEXT NOT NULL UNIQUE,
+                token_id   INTEGER,
+                approved   INTEGER NOT NULL DEFAULT 0,
+                expires_at TEXT NOT NULL,
+                created_at TEXT NOT NULL DEFAULT (datetime('now')),
+                FOREIGN KEY (token_id) REFERENCES api_tokens(id)
+            );
+
+            CREATE INDEX IF NOT EXISTS idx_api_tokens_token ON api_tokens(token);
+            CREATE INDEX IF NOT EXISTS idx_api_tokens_email ON api_tokens(email);
+            CREATE INDEX IF NOT EXISTS idx_login_requests_code ON login_requests(code);
             SQL;
     }
 

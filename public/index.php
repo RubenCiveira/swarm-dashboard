@@ -4,6 +4,8 @@ require_once '../src/Database.php';
 require_once '../src/AppManager.php';
 require_once '../src/DatabaseManager.php';
 require_once '../src/Access.php';
+require_once '../src/ApiTokenMiddleware.php';
+require_once '../src/AuthController.php';
 
 use Slim\Factory\AppFactory;
 use Psr\Http\Message\ResponseInterface as Response;
@@ -13,6 +15,7 @@ use Psr\Http\Message\ServerRequestInterface as Request;
 $database = new Database();
 $appManager = new AppManager($database);
 $databaseManager = new DatabaseManager($database);
+$authController = new AuthController($database->getPdo());
 
 $app = AppFactory::create();
 $scriptName = $_SERVER['SCRIPT_NAME']; // Devuelve algo como "/midashboard/index.php"
@@ -20,6 +23,7 @@ $basePath = str_replace('/index.php', '', $scriptName); // "/midashboard"
 $app->setBasePath($basePath);
 $app->addBodyParsingMiddleware();
 $app->addErrorMiddleware(true, true, true);
+$app->add(new ApiTokenMiddleware($database->getPdo()));
 new Access($app);
 // CORS middleware
 $app->add(function (Request $request, $handler) {
@@ -77,6 +81,15 @@ $app->get('/api/traces/{id}', function (Request $request, Response $response, $a
     }
 
 });
+
+// Auth routes
+$app->get('/auth/approve/{code}', fn($req, $res, $args) => $authController->approvePage($req, $res, $args));
+$app->get('/api/auth/login-request', fn($req, $res) => $authController->createLoginRequest($req, $res));
+$app->post('/api/auth/login-request/{code}/poll', fn($req, $res, $args) => $authController->pollLoginRequest($req, $res, $args));
+$app->post('/api/auth/login-request/{code}/approve', fn($req, $res, $args) => $authController->approveLoginRequest($req, $res, $args));
+$app->post('/api/auth/token', fn($req, $res) => $authController->createToken($req, $res));
+$app->get('/api/auth/tokens', fn($req, $res) => $authController->listTokens($req, $res));
+$app->delete('/api/auth/tokens/{id}', fn($req, $res, $args) => $authController->deleteToken($req, $res, $args));
 
 // API Routes for Apps
 $app->get('/api/apps', function (Request $request, Response $response) use ($appManager) {
