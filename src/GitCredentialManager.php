@@ -199,6 +199,72 @@ class GitCredentialManager {
         return [$envString, $repository];
     }
     
+    public function testCredential($id): array
+    {
+        $row = $this->getCredential($id);
+        if (!$row) {
+            return ['success' => false, 'message' => 'Credencial no encontrada'];
+        }
+
+        $token    = $this->decryptToken($row['token']);
+        $provider = $row['provider'];
+        $username = $row['username'] ?? 'oauth2';
+
+        // Endpoint de comprobación por proveedor (devuelve info del usuario autenticado)
+        $checks = [
+            'github'    => ['url' => 'https://api.github.com/user',                  'auth' => 'token'],
+            'gitlab'    => ['url' => 'https://gitlab.com/api/v4/user',               'auth' => 'header'],
+            'bitbucket' => ['url' => 'https://api.bitbucket.org/2.0/user',           'auth' => 'basic'],
+        ];
+
+        if (!isset($checks[$provider])) {
+            // Para proveedores desconocidos intentamos con la API de GitHub como fallback genérico
+            return ['success' => false, 'message' => "Proveedor '$provider' no soportado para verificación automática"];
+        }
+
+        $cfg = $checks[$provider];
+        $ch  = curl_init($cfg['url']);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_TIMEOUT, 10);
+        curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
+
+        $headers = ['Accept: application/json'];
+        if ($cfg['auth'] === 'token') {
+            $headers[] = "Authorization: token $token";
+            $headers[] = 'User-Agent: swarm-dashboard';
+        } elseif ($cfg['auth'] === 'header') {
+            $headers[] = "PRIVATE-TOKEN: $token";
+        } elseif ($cfg['auth'] === 'basic') {
+            curl_setopt($ch, CURLOPT_USERPWD, "$username:$token");
+        }
+        curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
+
+        $body    = curl_exec($ch);
+        $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        $curlErr = curl_error($ch);
+        curl_close($ch);
+
+        if ($curlErr) {
+            return ['success' => false, 'message' => "Error de conexión: $curlErr"];
+        }
+
+        $data = json_decode($body, true);
+
+        if ($httpCode === 200 && $data) {
+            $login = $data['login'] ?? $data['username'] ?? $data['name'] ?? null;
+            $msg   = $login ? "Token válido — usuario: $login" : 'Token válido';
+            return ['success' => true, 'message' => $msg, 'http_code' => $httpCode];
+        }
+
+        $apiMsg = $data['message'] ?? $data['error_description'] ?? $data['error'] ?? null;
+        $detail = $apiMsg ? " ($apiMsg)" : '';
+        return [
+            'success'   => false,
+            'message'   => "Token inválido o sin permisos (HTTP $httpCode)$detail",
+            'http_code' => $httpCode,
+        ];
+    }
+
     public function encryptToken($token) {
         // Usar una clave de encriptación simple (en producción usar algo más robusto)
         $key = hash('sha256', 'cicd-manager-secret-key', true);

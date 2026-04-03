@@ -342,5 +342,12 @@ $app->delete('/api/git-credentials/{id}', function (Request $request, Response $
     return $response->withHeader('Content-Type', 'application/json');
 });
 
+$app->post('/api/git-credentials/{id}/test', function (Request $request, Response $response, $args) use ($gitCredentialManager) {
+    $result = $gitCredentialManager->testCredential($args['id']);
+    $status = $result['success'] ? 200 : 422;
+    $response->getBody()->write(json_encode($result));
+    return $response->withHeader('Content-Type', 'application/json')->withStatus($status);
+});
+
 $app->run();
 ?>
