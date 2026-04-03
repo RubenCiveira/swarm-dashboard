@@ -23,8 +23,10 @@ $basePath = str_replace('/index.php', '', $scriptName); // "/midashboard"
 $app->setBasePath($basePath);
 $app->addBodyParsingMiddleware();
 $app->addErrorMiddleware(true, true, true);
-$app->add(new ApiTokenMiddleware($database->getPdo()));
+// Access se registra primero (más interno); ApiTokenMiddleware después (más externo),
+// así el token Bearer se valida antes de que Access intente redirigir a Google.
 new Access($app);
+$app->add(new ApiTokenMiddleware($database->getPdo()));
 // CORS middleware
 $app->add(function (Request $request, $handler) {
     $response = $handler->handle($request);

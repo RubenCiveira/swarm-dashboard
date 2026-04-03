@@ -1,6 +1,5 @@
 import type { Command } from 'commander';
 import chalk from 'chalk';
-import Table from 'cli-table3';
 import { clientFromProfile } from '../client.js';
 import type { ApiApp } from '../descriptor.js';
 
@@ -27,24 +26,32 @@ export function registerAppsList(program: Command): void {
         return;
       }
 
-      const table = new Table({
-        head: ['ID', 'Nombre', 'Hostname', 'Estado', 'Último deploy'].map((h) => chalk.bold(h)),
-        style: { head: [] },
-      });
+      const cols = [
+        { header: 'ID',            width: 5  },
+        { header: 'Nombre',        width: 28 },
+        { header: 'Hostname',      width: 30 },
+        { header: 'Estado',        width: 12 },
+        { header: 'Último deploy', width: 20 },
+      ];
+
+      const pad = (s: string, n: number) => s.slice(0, n).padEnd(n);
+      const header = cols.map((c) => chalk.bold(pad(c.header, c.width))).join('  ');
+      const sep    = cols.map((c) => '─'.repeat(c.width)).join('  ');
+
+      console.log(header);
+      console.log(chalk.dim(sep));
 
       for (const app of list) {
-        const status = app.status === 'active'
-          ? chalk.green(app.status)
-          : chalk.dim(app.status ?? '—');
-        table.push([
-          String(app.id),
-          app.name,
-          app.hostname,
-          status,
-          app.last_deployment ?? chalk.dim('—'),
-        ]);
-      }
+        const statusRaw = app.status ?? '—';
+        const statusCol = app.status === 'active' ? chalk.green(statusRaw) : chalk.dim(statusRaw);
 
-      console.log(table.toString());
+        console.log([
+          pad(String(app.id ?? ''), cols[0].width),
+          pad(app.name ?? '', cols[1].width),
+          pad(app.hostname ?? '', cols[2].width),
+          statusCol + ' '.repeat(Math.max(0, cols[3].width - statusRaw.length)),
+          pad(app.last_deployment ?? '—', cols[4].width),
+        ].join('  '));
+      }
     });
 }
