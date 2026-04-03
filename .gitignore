@@ -5,6 +5,10 @@
 /data/
 composer.lock
 
+# node cli
+node_modules/
+dist/
+
 # Entornos y Configuración
 .env
 .env.local
