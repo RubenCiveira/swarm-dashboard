@@ -1127,6 +1127,182 @@
         border-color: var(--accent) !important;
         box-shadow: 0 0 0 3px rgba(56,189,248,0.1) !important;
       }
+
+      /* ── LAYOUT ──────────────────────────────── */
+      .app-layout {
+        display: flex;
+        height: calc(100vh - 58px);
+        overflow: hidden;
+      }
+
+      /* ── SIDEBAR ─────────────────────────────── */
+      .sidebar {
+        width: 240px;
+        flex-shrink: 0;
+        background: var(--bg-surface);
+        border-right: 1px solid var(--border-subtle);
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+      }
+
+      .sidebar-search {
+        padding: 0.75rem;
+        border-bottom: 1px solid var(--border-subtle);
+      }
+
+      .sidebar-search-input {
+        width: 100%;
+        background: var(--bg-base);
+        border: 1px solid var(--border-muted);
+        border-radius: var(--radius-sm);
+        color: var(--text-primary);
+        font-family: var(--font-sans);
+        font-size: 0.8rem;
+        padding: 0.4rem 0.6rem 0.4rem 1.8rem;
+        outline: none;
+        transition: border-color 0.15s;
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%237a95b8' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='11' cy='11' r='8'/%3E%3Cpath d='m21 21-4.35-4.35'/%3E%3C/svg%3E");
+        background-repeat: no-repeat;
+        background-position: 0.45rem center;
+      }
+
+      .sidebar-search-input:focus { border-color: var(--accent); }
+      .sidebar-search-input::placeholder { color: var(--text-muted); }
+
+      .sidebar-scroll {
+        flex: 1;
+        overflow-y: auto;
+        overflow-x: hidden;
+        padding: 0.5rem 0;
+      }
+
+      .sidebar-scroll::-webkit-scrollbar { width: 4px; }
+      .sidebar-scroll::-webkit-scrollbar-track { background: transparent; }
+      .sidebar-scroll::-webkit-scrollbar-thumb { background: var(--border-muted); border-radius: 2px; }
+
+      .sidebar-section-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0.35rem 0.75rem;
+        font-size: 0.65rem;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        color: var(--text-muted);
+        font-family: var(--font-mono);
+        font-weight: 500;
+      }
+
+      .sidebar-add-btn {
+        background: none;
+        border: none;
+        color: var(--text-muted);
+        cursor: pointer;
+        font-size: 1rem;
+        line-height: 1;
+        padding: 0 0.1rem;
+        border-radius: var(--radius-sm);
+        transition: color 0.15s;
+      }
+      .sidebar-add-btn:hover { color: var(--accent); }
+
+      .ws-item {
+        display: flex;
+        align-items: center;
+        gap: 0.4rem;
+        padding: 0.35rem 0.75rem;
+        cursor: pointer;
+        font-size: 0.8125rem;
+        color: var(--text-secondary);
+        transition: background 0.1s, color 0.1s;
+        position: relative;
+        user-select: none;
+        white-space: nowrap;
+        overflow: hidden;
+      }
+
+      .ws-item:hover { background: var(--bg-raised); color: var(--text-primary); }
+
+      .ws-item.active {
+        background: var(--accent-dim);
+        color: var(--accent);
+        border-right: 2px solid var(--accent);
+      }
+
+      .ws-item .ws-toggle {
+        width: 14px; height: 14px;
+        font-size: 0.6rem;
+        display: flex; align-items: center; justify-content: center;
+        flex-shrink: 0;
+        color: var(--text-muted);
+        transition: transform 0.15s;
+      }
+      .ws-item .ws-toggle.expanded { transform: rotate(90deg); }
+      .ws-item .ws-icon { flex-shrink: 0; font-size: 0.85rem; }
+      .ws-item .ws-name { flex: 1; overflow: hidden; text-overflow: ellipsis; }
+      .ws-item .ws-count { font-size: 0.65rem; color: var(--text-muted); font-family: var(--font-mono); flex-shrink: 0; }
+
+      .ws-item .ws-actions { display: none; gap: 0.15rem; flex-shrink: 0; }
+      .ws-item:hover .ws-actions { display: flex; }
+
+      .ws-action-btn {
+        background: none; border: none;
+        color: var(--text-muted);
+        cursor: pointer;
+        font-size: 0.65rem;
+        padding: 0.1rem 0.2rem;
+        border-radius: 2px;
+        transition: color 0.1s, background 0.1s;
+      }
+      .ws-action-btn:hover { color: var(--text-primary); background: var(--bg-card); }
+      .ws-action-btn.danger:hover { color: var(--red); }
+
+      .ws-children { display: none; padding-left: 1rem; border-left: 1px solid var(--border-subtle); margin-left: 1.35rem; }
+      .ws-children.open { display: block; }
+
+      /* ── MAIN CONTENT ────────────────────────── */
+      .main-content {
+        flex: 1;
+        overflow-y: auto;
+        overflow-x: hidden;
+        padding: 2rem;
+      }
+
+      .main-content::-webkit-scrollbar { width: 6px; }
+      .main-content::-webkit-scrollbar-track { background: transparent; }
+      .main-content::-webkit-scrollbar-thumb { background: var(--border-muted); border-radius: 3px; }
+
+      /* ── WORKSPACE BADGE on app cards ───── */
+      .app-workspace-badge {
+        display: inline-flex; align-items: center; gap: 0.25rem;
+        font-size: 0.65rem; padding: 0.1rem 0.4rem;
+        border-radius: 9999px;
+        border: 1px solid var(--border-subtle);
+        color: var(--text-muted);
+        font-family: var(--font-mono);
+        margin-bottom: 0.25rem;
+        background: var(--bg-base);
+      }
+
+      /* ── COLOR/ICON PICKERS ──────────────────── */
+      .color-picker-row { display: flex; gap: 0.4rem; flex-wrap: wrap; }
+      .color-swatch {
+        width: 22px; height: 22px; border-radius: 50%;
+        border: 2px solid transparent; cursor: pointer;
+        transition: border-color 0.15s, transform 0.1s;
+      }
+      .color-swatch.selected, .color-swatch:hover { border-color: var(--text-primary); transform: scale(1.2); }
+      .icon-picker-row { display: flex; gap: 0.4rem; flex-wrap: wrap; }
+      .icon-option {
+        padding: 0.2rem 0.4rem;
+        border-radius: var(--radius-sm);
+        border: 1px solid var(--border-subtle);
+        background: var(--bg-base);
+        cursor: pointer; font-size: 1rem;
+        transition: border-color 0.15s, background 0.1s;
+      }
+      .icon-option.selected, .icon-option:hover { border-color: var(--accent); background: var(--accent-dim); }
     </style>
   </head>
   <body>
@@ -1135,26 +1311,49 @@
       <h1>Swarm <span>Dashboard</span></h1>
     </div>
 
-    <div class="container">
-      <div class="actions">
-        <button class="btn" onclick="openCreateModal()">
-          Nueva Aplicación
-        </button>
-        <button class="btn btn-secondary" onclick="openCredentialsModal()">
-          Gestionar Credenciales Git
-        </button>
-        <button class="btn btn-warning" onclick="openDatabasesModal()">
-          Gestionar Bases de Datos
-        </button>
-        <button class="btn btn-secondary" onclick="openTokensModal()">
+    <div class="app-layout">
+      <!-- ── SIDEBAR ───────────────────────────────── -->
+      <aside class="sidebar">
+        <div class="sidebar-search">
+          <input
+            class="sidebar-search-input"
+            type="text"
+            id="global-search"
+            placeholder="Buscar apps..."
+            oninput="onSearch(this.value)"
+          />
+        </div>
+        <div class="sidebar-scroll">
+          <div class="sidebar-section-header">
+            <span>Workspaces</span>
+            <button class="sidebar-add-btn" title="Nuevo workspace" onclick="openWorkspaceModal()">+</button>
+          </div>
+          <div id="workspace-tree"></div>
+        </div>
+      </aside>
+
+      <!-- ── MAIN ──────────────────────────────────── -->
+      <main class="main-content">
+        <div class="actions">
+          <button class="btn" onclick="openCreateModal()">
+            Nueva Aplicación
+          </button>
+          <button class="btn btn-secondary" onclick="openCredentialsModal()">
+            Gestionar Credenciales Git
+          </button>
+          <button class="btn btn-warning" onclick="openDatabasesModal()">
+            Gestionar Bases de Datos
+          </button>
+          <button class="btn btn-secondary" onclick="openTokensModal()">
           Tokens de API
         </button>
       </div>
 
-      <div id="apps-container" class="apps-grid">
-        <!-- Las aplicaciones se cargarán aquí -->
-      </div>
-    </div>
+          <div id="apps-container" class="apps-grid">
+            <!-- Las aplicaciones se cargarán aquí -->
+          </div>
+        </main>
+      </div><!-- end .app-layout -->
 
     <!-- Modal para crear/editar aplicación -->
     <div id="app-modal" class="modal">
@@ -1279,6 +1478,13 @@
                   >Si se especifica, se usará en lugar de la credencial
                   seleccionada arriba</small
                 >
+              </div>
+
+              <div class="form-group">
+                <label class="form-label" for="app-workspace">Workspace</label>
+                <select id="app-workspace" class="form-select">
+                  <option value="">— Sin workspace —</option>
+                </select>
               </div>
             </div>
 
@@ -2045,6 +2251,7 @@
         loadApps();
         loadCredentialsSelect();
         loadDatabasesSelect();
+        loadWorkspaces();
       });
 
       function updateDefaultPort() {
@@ -2141,15 +2348,63 @@
         }
       }
 
+      // -- WORKSPACE STATE
+      let allApps = [];
+      let activeWorkspaceId = null;
+      let searchQuery = '';
+      let workspaceTree = [];
+
       async function loadApps() {
         try {
           const response = await fetch("./api/apps");
-          const apps = await response.json();
-          renderApps(apps);
+          allApps = await response.json();
+          applyFilters();
         } catch (error) {
           console.error("Error cargando aplicaciones:", error);
         }
       }
+
+      function applyFilters() {
+        let apps = allApps;
+        if (activeWorkspaceId !== null) {
+          const descendants = getDescendantIds(activeWorkspaceId, workspaceTree);
+          descendants.add(activeWorkspaceId);
+          apps = apps.filter(a => a.workspace_id !== null && descendants.has(Number(a.workspace_id)));
+        }
+        if (searchQuery.trim()) {
+          const q = searchQuery.toLowerCase();
+          apps = apps.filter(a =>
+            a.name.toLowerCase().includes(q) ||
+            (a.hostname || '').toLowerCase().includes(q) ||
+            (a.repository || '').toLowerCase().includes(q)
+          );
+        }
+        renderApps(apps);
+      }
+
+      function getDescendantIds(wsId, tree) {
+        const ids = new Set();
+        function walk(nodes) {
+          for (const n of nodes) {
+            if (Number(n.id) === Number(wsId)) { collectAll(n, ids); }
+            else if (n.children && n.children.length) walk(n.children);
+          }
+        }
+        function collectAll(node, set) {
+          (node.children || []).forEach(c => { set.add(Number(c.id)); collectAll(c, set); });
+        }
+        walk(tree);
+        return ids;
+      }
+
+      function onSearch(val) { searchQuery = val; applyFilters(); }
+
+      function selectWorkspace(id) {
+        activeWorkspaceId = id;
+        renderWorkspaceTree();
+        applyFilters();
+      }
+
 
       function loadFiles() {
         const configMapJson = document
@@ -2308,8 +2563,8 @@
         const container = document.getElementById("apps-container");
 
         if (apps.length === 0) {
-          container.innerHTML =
-            '<p style="text-align:center;color:var(--text-muted);grid-column:1/-1;padding:3rem;font-family:var(--font-mono);font-size:0.875rem;">— sin aplicaciones configuradas —</p>';
+          const msg = searchQuery || activeWorkspaceId !== null ? '\u2014 sin resultados \u2014' : '\u2014 sin aplicaciones configuradas \u2014';
+          container.innerHTML = `<p style="text-align:center;color:var(--text-muted);grid-column:1/-1;padding:3rem;font-family:var(--font-mono);font-size:0.875rem;">${msg}</p>`;
           return;
         }
 
@@ -2324,6 +2579,7 @@
                                 ${app.status === "active" ? "Activa" : "Inactiva"}
                             </span>
                         </div>
+                        ${app.workspace_name ? `<div class="app-workspace-badge" style="border-color:${app.workspace_color}40;color:${app.workspace_color}">${app.workspace_icon} ${app.workspace_name}</div>` : ''}
                         <div class="app-info">
                             <p><strong>Hostname</strong> ${app.hostname}</p>
                             <p><strong>Repo</strong> ${app.repository}</p>
@@ -2470,6 +2726,7 @@
           document.getElementById("app-trace-type").value = app.trace_type;
           document.getElementById("app-trace-path").value = app.trace_path;
           document.getElementById("configMapInput").value = app.config_maps;
+          document.getElementById("app-workspace").value = app.workspace_id || "";
 
           setCronSchedulerValue(app.cron_period);
           loadFiles();
@@ -2891,6 +3148,8 @@
               document.getElementById("app-git-credential").value || null,
             custom_git_token:
               document.getElementById("app-custom-token").value || null,
+            workspace_id:
+              document.getElementById("app-workspace").value || null,
           };
 
           try {
@@ -3624,6 +3883,267 @@
           alert("Error revocando el token");
         }
       }
+
+      // ===== WORKSPACE FUNCTIONS ==============================================
+
+      const WS_COLORS = ['#38bdf8','#34d399','#a78bfa','#f97316','#f87171','#fbbf24','#e879f9','#60a5fa','#2dd4bf','#fb7185'];
+      const WS_ICON_MAP = {'folder':'📁','box':'📦','star':'⭐','heart':'❤️','zap':'⚡','globe':'🌎','server':'🖥️','code':'💻','layers':'📊','cpu':'💾','cloud':'☁️','database':'🗄️','git-branch':'🔀','package':'📦','settings':'⚙️','home':'🏠','lock':'🔒','shield':'🛡️','activity':'📈','map':'🗺️'};
+      const WS_ICONS = Object.keys(WS_ICON_MAP);
+
+      async function loadWorkspaces() {
+        try {
+          const res = await fetch('./api/workspaces');
+          workspaceTree = await res.json();
+          renderWorkspaceTree();
+          populateWorkspaceSelects();
+        } catch(e) { console.error('Error loading workspaces', e); }
+      }
+
+      function countAppsInWorkspace(wsId) {
+        const descendants = getDescendantIds(wsId, workspaceTree);
+        descendants.add(Number(wsId));
+        return allApps.filter(a => a.workspace_id !== null && descendants.has(Number(a.workspace_id))).length;
+      }
+
+      function renderWorkspaceTree() {
+        const container = document.getElementById('workspace-tree');
+        const isAllActive = activeWorkspaceId === null;
+        const allItem = '<div class="ws-item' + (isAllActive ? ' active' : '') + '" onclick="selectWorkspace(null)">'
+          + '<span class="ws-icon">🏠</span>'
+          + '<span class="ws-name">Todas las apps</span>'
+          + '<span class="ws-count">' + allApps.length + '</span>'
+          + '</div>';
+        container.innerHTML = allItem + renderWsNodes(workspaceTree, 0);
+      }
+
+      function renderWsNodes(nodes, depth) {
+        return nodes.map(ws => {
+          const hasChildren = ws.children && ws.children.length > 0;
+          const isActive = Number(activeWorkspaceId) === Number(ws.id);
+          const count = countAppsInWorkspace(ws.id);
+          const indentPx = 0.75 + depth * 0.75;
+          const iconStr = WS_ICON_MAP[ws.icon] || ws.icon || '📁';
+
+          const childrenHtml = hasChildren
+            ? '<div class="ws-children open" id="wsc-' + ws.id + '">' + renderWsNodes(ws.children, depth + 1) + '</div>'
+            : '';
+
+          return '<div class="ws-item' + (isActive ? ' active' : '') + '" onclick="selectWorkspace(' + ws.id + ')" style="padding-left:' + indentPx + 'rem">'
+            + (hasChildren ? '<span class="ws-toggle expanded" onclick="toggleWsChildren(event,' + ws.id + ')">&#9654;</span>' : '<span class="ws-toggle"></span>')
+            + '<span class="ws-icon">' + iconStr + '</span>'
+            + '<span class="ws-name">' + escHtml(ws.name) + '</span>'
+            + (count > 0 ? '<span class="ws-count">' + count + '</span>' : '')
+            + '<span class="ws-actions" onclick="event.stopPropagation()">'
+            + '<button class="ws-action-btn" title="Editar" onclick="openWorkspaceModal(' + ws.id + ')">&#9998;</button>'
+            + '<button class="ws-action-btn danger" title="Eliminar" onclick="deleteWorkspace(' + ws.id + ')">&#10005;</button>'
+            + '</span></div>'
+            + childrenHtml;
+        }).join('');
+      }
+
+      function toggleWsChildren(e, wsId) {
+        e.stopPropagation();
+        const el = document.getElementById('wsc-' + wsId);
+        if (el) el.classList.toggle('open');
+        e.target.classList.toggle('expanded');
+      }
+
+      function escHtml(str) {
+        return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+      }
+
+      function populateWorkspaceSelects() {
+        const flat = flatWorkspaces(workspaceTree);
+        const appWsSelect = document.getElementById('app-workspace');
+        if (appWsSelect) {
+          const cur = appWsSelect.value;
+          appWsSelect.innerHTML = '<option value="">\u2014 Sin workspace \u2014</option>';
+          flat.forEach(ws => {
+            const opt = document.createElement('option');
+            opt.value = ws.id; opt.textContent = ws.path;
+            appWsSelect.appendChild(opt);
+          });
+          appWsSelect.value = cur;
+        }
+        const parentSelect = document.getElementById('ws-parent');
+        if (parentSelect) {
+          const selfId = document.getElementById('ws-id').value;
+          const cur = parentSelect.value;
+          parentSelect.innerHTML = '<option value="">\u2014 Ra\xedz \u2014</option>';
+          flat.forEach(ws => {
+            if (String(ws.id) === String(selfId)) return;
+            const opt = document.createElement('option');
+            opt.value = ws.id; opt.textContent = ws.path;
+            parentSelect.appendChild(opt);
+          });
+          parentSelect.value = cur;
+        }
+      }
+
+      function flatWorkspaces(nodes, prefix) {
+        prefix = prefix || '';
+        let result = [];
+        nodes.forEach(ws => {
+          const path = prefix ? prefix + ' / ' + ws.name : ws.name;
+          result.push({ id: ws.id, path });
+          if (ws.children && ws.children.length) result = result.concat(flatWorkspaces(ws.children, path));
+        });
+        return result;
+      }
+
+      // ── Workspace Modal ──────────────────────────────────────────────────────
+      let editingWorkspaceId = null;
+
+      function openWorkspaceModal(id) {
+        editingWorkspaceId = id || null;
+        document.getElementById('ws-modal-title').textContent = id ? 'Editar Workspace' : 'Nuevo Workspace';
+        document.getElementById('ws-id').value = id || '';
+        document.getElementById('workspace-form').reset();
+        document.getElementById('ws-id').value = id || '';
+
+        const iconPicker = document.getElementById('ws-icon-picker');
+        iconPicker.innerHTML = WS_ICONS.map(ic =>
+          '<span class="icon-option" onclick="selectWsIcon(\'' + ic + '\')" data-icon="' + ic + '">' + (WS_ICON_MAP[ic] || ic) + '</span>'
+        ).join('');
+
+        const colorPicker = document.getElementById('ws-color-picker');
+        colorPicker.innerHTML = WS_COLORS.map(c =>
+          '<div class="color-swatch" style="background:' + c + '" data-color="' + c + '" onclick="selectWsColor(\'' + c + '\')"></div>'
+        ).join('');
+
+        if (id) {
+          const ws = findWorkspace(id, workspaceTree);
+          if (ws) {
+            document.getElementById('ws-name').value = ws.name;
+            document.getElementById('ws-description').value = ws.description || '';
+            document.getElementById('ws-icon').value = ws.icon || 'folder';
+            document.getElementById('ws-color').value = ws.color || '#38bdf8';
+          }
+        } else {
+          document.getElementById('ws-icon').value = 'folder';
+          document.getElementById('ws-color').value = '#38bdf8';
+        }
+
+        populateWorkspaceSelects();
+
+        if (id) {
+          const ws = findWorkspace(id, workspaceTree);
+          if (ws) document.getElementById('ws-parent').value = ws.parent_id || '';
+        }
+
+        document.querySelectorAll('#ws-icon-picker .icon-option').forEach(el => {
+          el.classList.toggle('selected', el.dataset.icon === document.getElementById('ws-icon').value);
+        });
+        document.querySelectorAll('#ws-color-picker .color-swatch').forEach(el => {
+          el.classList.toggle('selected', el.dataset.color === document.getElementById('ws-color').value);
+        });
+
+        document.getElementById('workspace-modal').style.display = 'block';
+      }
+
+      function closeWorkspaceModal() {
+        document.getElementById('workspace-modal').style.display = 'none';
+      }
+
+      function selectWsIcon(icon) {
+        document.getElementById('ws-icon').value = icon;
+        document.querySelectorAll('#ws-icon-picker .icon-option').forEach(el => {
+          el.classList.toggle('selected', el.dataset.icon === icon);
+        });
+      }
+
+      function selectWsColor(color) {
+        document.getElementById('ws-color').value = color;
+        document.querySelectorAll('#ws-color-picker .color-swatch').forEach(el => {
+          el.classList.toggle('selected', el.dataset.color === color);
+        });
+      }
+
+      function findWorkspace(id, nodes) {
+        for (const n of nodes) {
+          if (Number(n.id) === Number(id)) return n;
+          if (n.children && n.children.length) { const f = findWorkspace(id, n.children); if (f) return f; }
+        }
+        return null;
+      }
+
+      async function saveWorkspace(e) {
+        e.preventDefault();
+        const id = document.getElementById('ws-id').value;
+        const data = {
+          name: document.getElementById('ws-name').value,
+          description: document.getElementById('ws-description').value,
+          parent_id: document.getElementById('ws-parent').value || null,
+          icon: document.getElementById('ws-icon').value || 'folder',
+          color: document.getElementById('ws-color').value || '#38bdf8',
+        };
+        try {
+          const method = id ? 'PUT' : 'POST';
+          const url = id ? './api/workspaces/' + id : './api/workspaces';
+          const res = await fetch(url, { method, headers: {'Content-Type':'application/json'}, body: JSON.stringify(data) });
+          const result = await res.json();
+          if (result.success) {
+            closeWorkspaceModal();
+            await loadWorkspaces();
+          } else { alert('Error: ' + result.message); }
+        } catch(err) { alert('Error: ' + err.message); }
+      }
+
+      async function deleteWorkspace(id) {
+        const ws = findWorkspace(id, workspaceTree);
+        if (!ws) return;
+        if (!confirm('Eliminar workspace "' + ws.name + '"? Las apps y sub-workspaces se mover\xe1n al nivel superior.')) return;
+        try {
+          const res = await fetch('./api/workspaces/' + id, { method: 'DELETE' });
+          const result = await res.json();
+          if (result.success) {
+            if (Number(activeWorkspaceId) === Number(id)) activeWorkspaceId = null;
+            await loadWorkspaces();
+            await loadApps();
+          } else { alert('Error: ' + result.message); }
+        } catch(err) { alert('Error: ' + err.message); }
+      }
+
+      // ===== END WORKSPACE FUNCTIONS ==========================================
     </script>
+
+    <!-- Workspace Modal -->
+    <div id="workspace-modal" class="modal">
+      <div class="modal-content" style="max-width:480px">
+        <div class="modal-header">
+          <h2 class="modal-title" id="ws-modal-title">Nuevo Workspace</h2>
+          <button class="close" onclick="closeWorkspaceModal()">&times;</button>
+        </div>
+        <form id="workspace-form" onsubmit="saveWorkspace(event)">
+          <input type="hidden" id="ws-id" />
+          <div class="form-group">
+            <label class="form-label">Nombre *</label>
+            <input type="text" id="ws-name" class="form-input" required />
+          </div>
+          <div class="form-group">
+            <label class="form-label">Descripción</label>
+            <input type="text" id="ws-description" class="form-input" />
+          </div>
+          <div class="form-group">
+            <label class="form-label">Workspace padre</label>
+            <select id="ws-parent" class="form-select"><option value="">— Raíz —</option></select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Icono</label>
+            <div class="icon-picker-row" id="ws-icon-picker"></div>
+            <input type="hidden" id="ws-icon" value="folder" />
+          </div>
+          <div class="form-group">
+            <label class="form-label">Color</label>
+            <div class="color-picker-row" id="ws-color-picker"></div>
+            <input type="hidden" id="ws-color" value="#38bdf8" />
+          </div>
+          <div class="form-actions">
+            <button type="button" class="btn btn-secondary" onclick="closeWorkspaceModal()">Cancelar</button>
+            <button type="submit" class="btn">Guardar</button>
+          </div>
+        </form>
+      </div>
+    </div>
   </body>
 </html>

@@ -22,6 +22,7 @@ class Database
             '2.1.1' => $this->v2_1_1(),
             '2.1.2' => $this->v2_1_2(),
             '2.2.0' => $this->v2_2_0(),
+            '2.3.0' => $this->v2_3_0(),
         ]);
         $this->applyMigrations();
     }
@@ -259,6 +260,29 @@ class Database
             CREATE INDEX IF NOT EXISTS idx_api_tokens_token ON api_tokens(token);
             CREATE INDEX IF NOT EXISTS idx_api_tokens_email ON api_tokens(email);
             CREATE INDEX IF NOT EXISTS idx_login_requests_code ON login_requests(code);
+            SQL;
+    }
+
+    private function v2_3_0(): string
+    {
+        return <<<SQL
+            CREATE TABLE IF NOT EXISTS workspaces (
+                id          INTEGER PRIMARY KEY AUTOINCREMENT,
+                name        TEXT NOT NULL,
+                description TEXT,
+                parent_id   INTEGER DEFAULT NULL,
+                icon        TEXT DEFAULT '📁',
+                color       TEXT DEFAULT '#38bdf8',
+                sort_order  INTEGER DEFAULT 0,
+                created_at  TEXT NOT NULL DEFAULT (datetime('now')),
+                updated_at  TEXT NOT NULL DEFAULT (datetime('now')),
+                FOREIGN KEY (parent_id) REFERENCES workspaces(id)
+            );
+
+            ALTER TABLE apps ADD COLUMN workspace_id INTEGER DEFAULT NULL REFERENCES workspaces(id);
+
+            CREATE INDEX IF NOT EXISTS idx_workspaces_parent ON workspaces(parent_id);
+            CREATE INDEX IF NOT EXISTS idx_apps_workspace ON apps(workspace_id);
             SQL;
     }
 

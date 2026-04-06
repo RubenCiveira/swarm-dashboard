@@ -3,6 +3,7 @@ require_once '../vendor/autoload.php';
 require_once '../src/Database.php';
 require_once '../src/AppManager.php';
 require_once '../src/DatabaseManager.php';
+require_once '../src/WorkspaceManager.php';
 require_once '../src/Access.php';
 require_once '../src/ApiTokenMiddleware.php';
 require_once '../src/AuthController.php';
@@ -15,6 +16,7 @@ use Psr\Http\Message\ServerRequestInterface as Request;
 $database = new Database();
 $appManager = new AppManager($database);
 $databaseManager = new DatabaseManager($database);
+$workspaceManager = new WorkspaceManager($database);
 $authController = new AuthController($database->getPdo());
 
 $app = AppFactory::create();
@@ -347,6 +349,43 @@ $app->post('/api/git-credentials/{id}/test', function (Request $request, Respons
     $status = $result['success'] ? 200 : 422;
     $response->getBody()->write(json_encode($result));
     return $response->withHeader('Content-Type', 'application/json')->withStatus($status);
+});
+
+
+// Workspace routes
+$app->get('/api/workspaces', function (Request $request, Response $response) use ($workspaceManager) {
+    $tree = $workspaceManager->getTree();
+    $response->getBody()->write(json_encode($tree));
+    return $response->withHeader('Content-Type', 'application/json');
+});
+
+$app->post('/api/workspaces', function (Request $request, Response $response) use ($workspaceManager) {
+    $data = $request->getParsedBody();
+    $result = $workspaceManager->createWorkspace($data);
+    $status = $result['success'] ? 201 : 400;
+    $response->getBody()->write(json_encode($result));
+    return $response->withHeader('Content-Type', 'application/json')->withStatus($status);
+});
+
+$app->put('/api/workspaces/{id}', function (Request $request, Response $response, $args) use ($workspaceManager) {
+    $data = $request->getParsedBody();
+    $result = $workspaceManager->updateWorkspace((int)$args['id'], $data);
+    $response->getBody()->write(json_encode($result));
+    return $response->withHeader('Content-Type', 'application/json');
+});
+
+$app->delete('/api/workspaces/{id}', function (Request $request, Response $response, $args) use ($workspaceManager) {
+    $result = $workspaceManager->deleteWorkspace((int)$args['id']);
+    $response->getBody()->write(json_encode($result));
+    return $response->withHeader('Content-Type', 'application/json');
+});
+
+$app->patch('/api/apps/{id}/workspace', function (Request $request, Response $response, $args) use ($workspaceManager) {
+    $data = $request->getParsedBody();
+    $workspaceId = isset($data['workspace_id']) && $data['workspace_id'] !== '' ? (int)$data['workspace_id'] : null;
+    $result = $workspaceManager->moveApp((int)$args['id'], $workspaceId);
+    $response->getBody()->write(json_encode($result));
+    return $response->withHeader('Content-Type', 'application/json');
 });
 
 $app->run();

@@ -21,9 +21,11 @@ class AppManager {
     
     public function getAllApps() {
         $stmt = $this->db->query("
-            SELECT a.*, d.name as database_name, d.db_type, d.status as db_status
+            SELECT a.*, d.name as database_name, d.db_type, d.status as db_status,
+                   w.name as workspace_name, w.icon as workspace_icon, w.color as workspace_color
             FROM apps a 
-            LEFT JOIN databases d ON a.database_id = d.id 
+            LEFT JOIN databases d ON a.database_id = d.id
+            LEFT JOIN workspaces w ON a.workspace_id = w.id
             ORDER BY a.created_at DESC
         ");
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
@@ -31,9 +33,11 @@ class AppManager {
     
     public function getApp($id) {
         $stmt = $this->db->prepare("
-            SELECT a.*, d.name as database_name 
+            SELECT a.*, d.name as database_name,
+                   w.name as workspace_name, w.icon as workspace_icon, w.color as workspace_color
             FROM apps a 
-            LEFT JOIN databases d ON a.database_id = d.id 
+            LEFT JOIN databases d ON a.database_id = d.id
+            LEFT JOIN workspaces w ON a.workspace_id = w.id
             WHERE a.id = ?
         ");
         $stmt->execute([$id]);
@@ -51,8 +55,8 @@ class AppManager {
             $directory = ConfigManager::getDirectoryForHostname($data['hostname']);
         
             $stmt = $this->db->prepare("
-                INSERT INTO apps (name, repository, hostname, directory, database_id, config_maps, git_credential_id, custom_git_token, log_type, log_path, trace_type, trace_path, cron_path, cron_period) 
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                INSERT INTO apps (name, repository, hostname, directory, database_id, config_maps, git_credential_id, custom_git_token, log_type, log_path, trace_type, trace_path, cron_path, cron_period, workspace_id) 
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             ");
             
             // Encriptar token personalizado si existe
@@ -60,6 +64,7 @@ class AppManager {
             if (!empty($data['custom_git_token'])) {
                 $customToken = $this->gitCredentialManager->encryptToken($data['custom_git_token']);
             }
+            $workspaceId = isset($data['workspace_id']) && $data['workspace_id'] !== '' ? (int)$data['workspace_id'] : null;
             $stmt->execute([
                 $data['name'],
                 $data['repository'],
@@ -75,6 +80,7 @@ class AppManager {
                 $data['trace_path'] ?? null,
                 $data['cron_path'] ?? null,
                 $data['cron_period'] ?? null,
+                $workspaceId,
             ]);
             
             $appId = $this->db->lastInsertId();
@@ -109,13 +115,14 @@ class AppManager {
             $stmt = $this->db->prepare("
                 UPDATE apps 
                 SET name = ?, repository = ?, hostname = ?, directory = ?, 
-                    database_id = ?, config_maps = ?, git_credential_id = ?, custom_git_token = ?, log_type = ?, log_path = ?, trace_type = ?, trace_path = ?, cron_path = ?, cron_period = ?, updated_at = CURRENT_TIMESTAMP
+                    database_id = ?, config_maps = ?, git_credential_id = ?, custom_git_token = ?, log_type = ?, log_path = ?, trace_type = ?, trace_path = ?, cron_path = ?, cron_period = ?, workspace_id = ?, updated_at = CURRENT_TIMESTAMP
                 WHERE id = ?
             ");
             $customToken = null;
             if (!empty($data['custom_git_token'])) {
                 $customToken = $this->gitCredentialManager->encryptToken($data['custom_git_token']);
             }
+            $workspaceId = isset($data['workspace_id']) && $data['workspace_id'] !== '' ? (int)$data['workspace_id'] : null;
             $stmt->execute([
                 $data['name'],
                 $data['repository'],
@@ -131,6 +138,7 @@ class AppManager {
                 $data['trace_path'] ?? null,
                 $data['cron_path'] ?? null,
                 $data['cron_period'] ?? null,
+                $workspaceId,
                 $id
             ]);
             

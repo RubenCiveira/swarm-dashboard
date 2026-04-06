@@ -9,6 +9,8 @@ export interface ApiApp {
   directory: string;
   git_credential_id: number | null;
   database_id: number | null;
+  workspace_id: number | null;
+  workspace_name: string | null;
   config_maps: string | null;
   log_type: string | null;
   log_path: string | null;
@@ -28,6 +30,7 @@ export interface AppDescriptor {
     repository: string;
     hostname: string;
     directory: string;
+    workspace?: string;          // workspace path, e.g. "personal" or "personal/apps"
     git_credential_id?: number | null;
     database_id?: number | null;
     log?: { type: string; path: string };
@@ -35,6 +38,16 @@ export interface AppDescriptor {
     cron?: { path: string; period: string };
     config_maps?: Record<string, Record<string, string>>;
   };
+}
+
+// Shape of a workspace returned by GET /api/workspaces
+export interface ApiWorkspace {
+  id: number;
+  name: string;
+  parent_id: number | null;
+  icon: string | null;
+  color: string | null;
+  children: ApiWorkspace[];
 }
 
 export function apiAppToDescriptor(app: ApiApp): AppDescriptor {
@@ -48,6 +61,7 @@ export function apiAppToDescriptor(app: ApiApp): AppDescriptor {
     },
   };
 
+  if (app.workspace_name)            descriptor.app.workspace          = app.workspace_name;
   if (app.git_credential_id != null) descriptor.app.git_credential_id = app.git_credential_id;
   if (app.database_id != null)       descriptor.app.database_id        = app.database_id;
 
@@ -71,7 +85,10 @@ export function apiAppToDescriptor(app: ApiApp): AppDescriptor {
   return descriptor;
 }
 
-export function descriptorToApiPayload(d: AppDescriptor): Record<string, unknown> {
+export function descriptorToApiPayload(
+  d: AppDescriptor,
+  resolvedWorkspaceId?: number | null,
+): Record<string, unknown> {
   const app = d.app;
   return {
     name:              app.name,
@@ -80,6 +97,7 @@ export function descriptorToApiPayload(d: AppDescriptor): Record<string, unknown
     directory:         app.directory,
     git_credential_id: app.git_credential_id ?? null,
     database_id:       app.database_id ?? null,
+    workspace_id:      resolvedWorkspaceId ?? null,
     log_type:          app.log?.type  ?? '',
     log_path:          app.log?.path  ?? '',
     trace_type:        app.traces?.type ?? '',
